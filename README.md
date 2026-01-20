@@ -29,7 +29,7 @@
 | Arbejde m robotbil | Uge 8 23/02 -27/02|
 |Konkurrence kørsel i lodde kælderen | LKAA, FIKR 02/03|
 |De studerende fremlægger opnåede resultater. (og biler tilbage til afdeling) |LKAA, FIKR 05/03|
-|Rapport aflevering | ===06/03===|
+|Rapport aflevering | ___06/03___|
 
 ## Konkurrencerne
 Der bliver afholdt en Wall-follow konkurrence, en SUMO-kamp og en fodbold konkurrence.
@@ -75,7 +75,10 @@ Reglerne for konkurrencerne er som beskrevet herunder
 - 1 x Lithium Ion battery pack for running the car
 - Skruer og møtrikker.
 
-De studerende skal udføre en kvalitetskontrol af de materialer der modtages. Det er komponenter som har været anvendt før, så fejl i komponenterne må forventes. Nye komponenter kan rekvireres ved underviseren. Bilsættene vil også være mere eller mindre samlede i forvejen.
+> De studerende skal udføre en kvalitetskontrol af de materialer der modtages.
+> Det er komponenter som har været anvendt før, så fejl i komponenterne må forventes.
+
+Nye komponenter kan rekvireres ved underviseren. Bilsættene vil også være mere eller mindre samlede i forvejen.
 
 ## De faglige formål med projektet er at anvende:
 
@@ -90,7 +93,7 @@ De studerende skal udføre en kvalitetskontrol af de materialer der modtages. De
   - flowchart.
   - input, proces og output
   - test af funktionalitet
-- Hver studerende skal udvikle mindst en softwarefunktion
+- __Hver studerende skal udvikle mindst en softwarefunktion__
 - Holdet skal tegne hele modulstruktur med funktionshierarkiet
 
 ### I embedded faget
