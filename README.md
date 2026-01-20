@@ -1,5 +1,7 @@
 # Robotbilsprojekt
+
 ## De overordnede formål med projektet er at:
+
 - Gennemføre et projekt som involverer fagene
   - Software
   - embedded systems
@@ -7,6 +9,7 @@
   - netværk
 - Bygge og programmere robotbilen så den kan deltage i et antal konkurrencer
 - Dokumentere og præsentere projektet.
+
 ## Tidsplan
 
 | Emne | Underviser og dato |
@@ -41,7 +44,9 @@ Reglerne for konkurrencerne er som beskrevet herunder
 - For at opnå en god tid er det vigtigt at robotbilen reagerer passende hurtigt.
 - Væggen der skal følges, vil have maximalt 90 graders hjørner(ind og ud).
 - Der køres i henhold til elevernes baneudvalgs regler (vedhæftet). Sidste beslutning er hoveddommerens.
+
 ### SUMO Battle (autonom konkurrence i at skubbe papkasser ud af en cirkulær arena):
+
 - Ingen indgriben er tilladt efter bilen er startet i SUMO konkurrencen.
 - Robotbilen skal bruge de indbyggede sensorer til navigation.
 - Arenaen er markeret med sort tape.
@@ -49,7 +54,9 @@ Reglerne for konkurrencerne er som beskrevet herunder
 - Der bliver arrangeret en konkurrence. (tidtagning)
 - Der må ikke tilføjes dele, der rækker ud over chassiset
 - Der gives point afhængig af antallet af ud-skubbede kasser og den tid der er brugt.
+
 ### Fjernstyret fodbold.
+
 - Der skal laves et Python program på Pc’en som kan give brugeren mulighed for at styre robotbilen og dermed deltage i en fodboldkamp.
 - Fodboldbanen bliver cirka 4x6 meter med sidevægge
 - Målet vil være ca. 1 meter bred i hver ende af banen
@@ -57,7 +64,9 @@ Reglerne for konkurrencerne er som beskrevet herunder
   - NB: Dette program skal også kunne
   - Sætte bilen i Wall-follow-mode og i SUMO-mode
   - Og vise den aktuelle spændingen på batteriet.
+
 ## Materialer
+
 ### RoboCar-Set
 - 1 x Infra-red reflective light sensors QRE1113 or similar
 - 1 x TOF light sensor (LT53l1X) GY53
@@ -66,13 +75,14 @@ Reglerne for konkurrencerne er som beskrevet herunder
 - 1 x Lithium Ion battery pack for running the car
 - Skruer og møtrikker.
 
-De studerende skal udføre en kvalitetskontrol af de materialer der modtages. Det er komponenter
-som har været anvendt før, så fejl i komponenterne må forventes. Nye komponenter kan rekvireres
-ved underviseren. Bilsættene vil også være mere eller mindre samlede i forvejen.
+De studerende skal udføre en kvalitetskontrol af de materialer der modtages. Det er komponenter som har været anvendt før, så fejl i komponenterne må forventes. Nye komponenter kan rekvireres ved underviseren. Bilsættene vil også være mere eller mindre samlede i forvejen.
+
 ## De faglige formål med projektet er at anvende:
+
 ### I managementfaget
 - Work break down
 - Gantt diagram
+
 ### I softwarefaget at
 - Lave en løsning som baserer sig på modulstruktur med et funktionshierarki
 - Lave stabil og testbar software.
@@ -82,6 +92,7 @@ ved underviseren. Bilsættene vil også være mere eller mindre samlede i forvej
   - test af funktionalitet
 - Hver studerende skal udvikle mindst en softwarefunktion
 - Holdet skal tegne hele modulstruktur med funktionshierarkiet
+
 ### I embedded faget
 - Tegne et blokdiagram af hele systemet
 - Arbejde struktureret på modulniveau
@@ -92,9 +103,11 @@ ved underviseren. Bilsættene vil også være mere eller mindre samlede i forvej
   - Energiforsyningen LiPo batteri
   - De elektriske og mekaniske problemer der opstår i projektet
   - Kommunikationstekniske udfordringer (UDP)
+
 # Krav til rapporten/afleveringen
 - Rapporten skal følge afdelingens tekniske rapportskabelon
 - Projektrapportens længde skal være mellem 8 og 12 normalsider. (20000 til 30000 anslag)
+
 ## Minimum indhold:
 - Blok Diagram på systemniveau
 - Et elektrisk diagram (retningslinjer fra embedded faget)
@@ -105,18 +118,17 @@ ved underviseren. Bilsættene vil også være mere eller mindre samlede i forvej
 - Link til teknisk video (youtube eller lignende)
 - Vedhæft powerpoint eller lignende
 - Testcases for projektet
+
 # Krav til præsentationen
 > (15 minutter inklusive video og spørgsmål)
 
-Se dette som en eksamenssituation. Så overbevis Underviserne om, at I som gruppe
-er ansvarlige for og har styr på alle tekniske aspekter af dette projekt.
-Indholdet i præsentationen skal tage udgangspunkt i reflektioner over en
-systemforbedring. (find noget som ikke virkede optimalt og fremlæg design til et
-forbedringsforslag)
-Denne præsentation vil være for hele klassen, og hvert gruppemedlem skal deltage
-aktivt i præsentationen.
+Se dette som en eksamenssituation. Så overbevis Underviserne om, at I som gruppe er ansvarlige for og har styr på alle tekniske aspekter af dette projekt. Indholdet i præsentationen skal tage udgangspunkt i reflektioner over en systemforbedring. (find noget som ikke virkede optimalt og fremlæg design til et forbedringsforslag)
+
+Denne præsentation vil være for hele klassen, og hvert gruppemedlem skal deltage aktivt i præsentationen.
 Præsentationen skal støttes af en elektronisk præsentation: .pptx,.pdf, link til Prezi
 eller andet.
-Video (maximalt 1 minut)
+
+### Video (maximalt 1 minut)
 - En teknisk video som dokumenterer at robotbilen kan leve op til kravene.
+
 Reserver 3 minutter til spørgsmål/diskussion med tilhørere.
