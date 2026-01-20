@@ -12,24 +12,24 @@
 
 ## Tidsplan
 
-| Emne | Underviser og dato |
-|---|---|
-| Intro til opgaven | KBKJ/LKAA og FIKR 20/01 (Bil dele udleveres)|
-| Wbs, critical path og Gannt, gruppekontrakt, projekt initiation |FIKR 22/01, 29/01, 05/02 og 12/02 |
-| H-bro (Regulator – LIPO) | LKAA 26/01 |
-| Batteri typer | KBKJ 27/01|
-|UDP (pico og pc) | LKAA 02/02|
-|Struktureret programmering og Klasser i python| FIKR 23/01 & 30/01 & 06/02 & 13/02 & 20/02
-| Intro af rapport skabelon | FIKR 19/02|
-|Reflektionssensoren |LKAA 09/02|
-| Samling af bil| KBKJ 20/01 og 21/01|
-|State-maskine| KBKJ 04/02|
-|Reguleringsteknik| KBKJ 10/02,17/02|
-|TOF-sensor| LKAA 02/02|
-| Arbejde m robotbil | Uge 8 23/02 -27/02|
-|Konkurrence kørsel i lodde kælderen | LKAA, FIKR 02/03|
-|De studerende fremlægger opnåede resultater. (og biler tilbage til afdeling) |LKAA, FIKR 05/03|
-|Rapport aflevering | ___06/03___|
+| Emne                                                                         | Underviser og dato                           |
+|------------------------------------------------------------------------------|----------------------------------------------|
+| Intro til opgaven                                                            | KBKJ/LKAA og FIKR 20/01 (Bil dele udleveres) |
+| Wbs, critical path og Gannt, gruppekontrakt, projekt initiation              | FIKR 22/01, 29/01, 05/02 og 12/02            |
+| H-bro (Regulator – LIPO)                                                     | LKAA 26/01                                   |
+| Batteri typer                                                                | KBKJ 27/01                                   |
+| UDP (pico og pc)                                                             | LKAA 02/02                                   |
+| Struktureret programmering og Klasser i python                               | FIKR 23/01 & 30/01 & 06/02 & 13/02 & 20/02   |
+| Intro af rapport skabelon                                                    | FIKR 19/02                                   |
+| Reflektionssensoren                                                          | LKAA 09/02                                   |
+| Samling af bil                                                               | KBKJ 20/01 og 21/01                          |
+| State-maskine                                                                | KBKJ 04/02                                   |
+| Reguleringsteknik                                                            | KBKJ 10/02,17/02                             |
+| TOF-sensor                                                                   | LKAA 02/02                                   |
+| Arbejde m robotbil                                                           | Uge 8 23/02 -27/02                           |
+| Konkurrence kørsel i lodde kælderen                                          | LKAA, FIKR 02/03                             |
+| De studerende fremlægger opnåede resultater. (og biler tilbage til afdeling) | LKAA, FIKR 05/03                             |
+| Rapport aflevering                                                           | ___06/03___                                  |
 
 ## Konkurrencerne
 Der bliver afholdt en Wall-follow konkurrence, en SUMO-kamp og en fodbold konkurrence.
