@@ -22,8 +22,6 @@ for i in range(5):
     led.off()
     sleep_ms(20)
     led.on()
+if wlan.isconnected():
+    import webrepl
 
-
-import webrepl
-
-webrepl.start()
