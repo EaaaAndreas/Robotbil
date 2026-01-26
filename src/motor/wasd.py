@@ -1,9 +1,6 @@
 from connectivity.network import wlan, init_wlan
-import network
 import socket
 from machine import Pin, PWM
-import time
-
 print('running wasd ')
 # ==== MOTOR SETUP (same mapping as before) ====
 ena = PWM(Pin(0))
@@ -110,6 +107,7 @@ while True:
                     cmd = p[2:]
                     break
             if cmd:
+                print("Command:",cmd)
                 handle_command(cmd)
             response = "OK"
         except:
@@ -118,4 +116,7 @@ while True:
     else:
         # basic root response
         cl.send("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nPico W motor server")
+    with open("./control.html", "r") as f: # TODO: Den skal ikke åbne filen hver gang. Det skal håndteres anderledes.
+        cl.send("\r\n" + f.read() + "\r\n")
+    # FIXME: Få serveren til at lytte efter input.
     cl.close()
