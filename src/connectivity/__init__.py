@@ -1,0 +1,5 @@
+# src/connectivity/__init__.py
+
+
+if __name__ == "__main__":
+    pass
