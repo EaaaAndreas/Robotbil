@@ -45,16 +45,17 @@ def motorB_stop():
     in4.low()
     enb.duty_u16(0)
 
-# Demo loop
-while True:
-    motorA_forward(2**16)
-    motorB_forward(2**16)
-    sleep(2)
+if __name__ == '__main__':
+    # Demo loop
+    while True:
+        motorA_forward(2**16)
+        motorB_forward(2**16)
+        sleep(2)
 
-    motorA_backward(2**16)
-    motorB_backward(2**16)
-    sleep(2)
+        motorA_backward(2**16)
+        motorB_backward(2**16)
+        sleep(2)
 
-    motorA_stop()
-    motorB_stop()
-    sleep(1)
+        motorA_stop()
+        motorB_stop()
+        sleep(1)

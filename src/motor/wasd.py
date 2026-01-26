@@ -1,7 +1,9 @@
 from connectivity.network import wlan, init_wlan
 import socket
 from machine import Pin, PWM
+
 print('running wasd ')
+
 # ==== MOTOR SETUP (same mapping as before) ====
 ena = PWM(Pin(0))
 in1 = Pin(1, Pin.OUT)
