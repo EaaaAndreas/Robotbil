@@ -2,13 +2,18 @@
 import umachine as machine
 from network import WLAN
 
+wlan = WLAN()
+
 def init_wlan(ssid="ITEK 1st", password="itekf25v", hostname="Shitbox"):
-    wlan = WLAN(WLAN.IF_STA)
+    global wlan
+
+    if wlan.isconnected() and wlan.config("ssid") == ssid:
+        return
 
     if wlan.active():
         wlan.active(False)
 
-    wlan.config(hostname=hostname)
+    wlan.config(interface_id=wlan.IF_STA, hostname=hostname)
     wlan.active(True)
 
     if not wlan.isconnected():
@@ -18,12 +23,12 @@ def init_wlan(ssid="ITEK 1st", password="itekf25v", hostname="Shitbox"):
         machine.idle()
 
 def init_ap(name="Shitbox", password="WS69"):
-    wlan = WLAN(WLAN.IF_AP)
+    global wlan
 
     if wlan.active():
         if wlan.isconnected():
             wlan.disconnect()
         wlan.active(False)
-    wlan.config(name=name, password=password)
+    wlan.config(interface_id=wlan.IF_AP, name=name, password=password)
 
     wlan.active(True)
