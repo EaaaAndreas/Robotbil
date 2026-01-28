@@ -34,7 +34,7 @@ def run_server() -> None:
     print("[SERVER] Setting up server") # Debug
 
     # Start socket og sæt det op på picoens IP - port 80 (HTTP)
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # FIX ME: `SOCK_STREAM` er TCP protokol. Den kan ændres til `socket.SOCK_DGRAM` for at bruge UDP (user DataGRAM protocol). Men så skal der nok også rettes til, andre steder i koden.
     s.bind(('', 80))
     s.listen()
 
