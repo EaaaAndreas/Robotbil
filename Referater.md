@@ -14,6 +14,18 @@ Jonas har meldt afbud
 - Tilføj det der mangler i diagrammer
 - Vi laver state-diagram til sumo (individuel aflevering)
 - Vi kigger på kravspecifikation
+## Debriefing
+
+
+### ToF
+Frederik og Jesper har arbejdet på at få ToF sensoren til at aflæse. Den virker og printer afstand.
+
+- Den skal sættes op til at returnere afstanden
+- Vi skal overveje hvilken enhed (meter, milimeter, etc.) vi vil aflæse i.
+
+### IR sensor
+Den er sat til 3V3. Men er ikke implementeret endnu.
+
 
 ## 29/01
 > Teamleder: Jonas
