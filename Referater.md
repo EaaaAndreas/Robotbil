@@ -9,7 +9,7 @@
 ## 30/01
 > Teamleder: Andreas
 
-Jonas har meldt afbud, Jesper er MIA.
+Jonas har meldt afbud
 ### Dagens program:
 - Tilføj det der mangler i diagrammer
 - Vi laver state-diagram til sumo (individuel aflevering)
@@ -36,6 +36,9 @@ Vi arbejder i fællesskab på at lave diagrammerne.
 ## Debriefing
 Vi har afleveret afleveringen.
 
+### TODO:
+- [ ] Vi skal have kigget på at lave statemachine på *sumo*-opgaven og skrevet den ind i funktions-diagrammet.
+- [ ] Vi skal have genbesøgt vores kravspecifikation og have den renskrevet.
 
 ## 27/1
 Vi har lavet en turnus for, hvem der er teamleder:
