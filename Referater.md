@@ -1,4 +1,19 @@
+# TODO
+- [ ] Vi skal have kigget på at lave statemachine på *sumo*-opgaven og skrevet den ind i funktions-diagrammet.
+- [ ] Vi skal have genbesøgt vores kravspecifikation og have den renskrevet.
+- [ ] Vi skal have tegnet kalibrering og batteristatus på vores diagrammer
+- [ ] Jonas giver øl
+
+
 # Uge 5
+## 30/01
+> Teamleder: Andreas
+
+### Dagens program:
+- Tilføj det der mangler i diagrammer
+- Vi laver state-diagram til sumo (individuel aflevering)
+- Vi kigger på kravspecifikation
+
 ## 29/01
 > Teamleder: Jonas
 ***VIGTIGT! Jonas giver øl, fordi han glemte at skrive at han ikke kom d. 27/1***
@@ -20,9 +35,6 @@ Vi arbejder i fællesskab på at lave diagrammerne.
 ## Debriefing
 Vi har afleveret afleveringen.
 
-### TODO:
-- [ ] Vi skal have kigget på at lave statemachine på *sumo*-opgaven og skrevet den ind i funktions-diagrammet.
-- [ ] Vi skal have genbesøgt vores kravspecifikation og have den renskrevet.
 
 ## 27/1
 Vi har lavet en turnus for, hvem der er teamleder:
