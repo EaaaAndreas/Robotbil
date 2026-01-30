@@ -1,10 +1,5 @@
-# Elektrisk diagram
 
-![](resourcer/Elektriske diagrammer/Robotbil-Elektrisk diagram.drawio.svg)
-
-
-# Blokdiagram
-![](resourcer/Elektriske diagrammer/Robotbil-Blokdiagram.drawio.svg)
+[Drawio diagrammer](https://drive.google.com/file/d/12cKhBBOZ2XZpDlE4mUX7-UuwRfjSf_MP/view?usp=sharing)
 
 
 
