@@ -1,7 +1,7 @@
 # TODO
 - [ ] Vi skal have kigget på at lave statemachine på *sumo*-opgaven og skrevet den ind i funktions-diagrammet.
-- [ ] Vi skal have genbesøgt vores kravspecifikation og have den renskrevet.
-- [ ] Vi skal have tegnet kalibrering og batteristatus på vores diagrammer
+- [x] Vi skal have genbesøgt vores kravspecifikation og have den renskrevet.
+- [x] Vi skal have tegnet kalibrering og batteristatus på vores diagrammer
 - [ ] Jonas giver øl
 
 
