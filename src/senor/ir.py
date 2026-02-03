@@ -1,12 +1,16 @@
-from machine import Pin
+from machine import Pin, ADC
 import time
 
-ir = Pin(27, Pin.IN, Pin.PULL_DOWN)
+sensor = ADC(Pin(26))   # <-- Correct class name
 
 while True:
-    if ir.value() == 1:
-        print("1")
-    else:
-        print("0")
+    value = sensor.read_u16()   # more accurate than .value()
+    print("Raw:", value)
 
-    time.sleep(0.2)
+    if value < 20000:
+        print("BLACK LINE")
+    else:
+        print("WHITE SURFACE")
+
+    print()
+    time.sleep(0.1)
