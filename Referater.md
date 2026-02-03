@@ -4,6 +4,11 @@
 - [x] Vi skal have tegnet kalibrering og batteristatus på vores diagrammer
 - [ ] Jonas giver øl
 
+# Uge 6
+# 03/02
+> Teamleder: Jesper
+
+
 
 # Uge 5
 ## 30/01

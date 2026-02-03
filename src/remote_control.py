@@ -1,6 +1,6 @@
 # src/remote_control.py
 import usocket as socket
-from connectivity.network import wlan, init_wlan
+from connectivity.net_setup import wlan, init_wlan
 from motor import motor1
 
 # Check om der er internet
