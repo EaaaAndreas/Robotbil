@@ -18,10 +18,11 @@ def tof():
 
 
 
-    distance = time.ticks_diff(endtime , starttime) / 100
-    print(distance, "cm") #print our data
+    distance = time.ticks_diff(endtime , starttime) / 100 * 10
+    print(distance, "mm") #print our data
     time.sleep(1) #skift til 0.1 hvis den skal printe ud data hurtigere
     return distance
 
-while True:
-    tof()
+if __name__ == '__main__':
+    while True:
+        tof()
