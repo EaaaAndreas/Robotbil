@@ -3,6 +3,7 @@
 - [x] Vi skal have genbesøgt vores kravspecifikation og have den renskrevet.
 - [x] Vi skal have tegnet kalibrering og batteristatus på vores diagrammer
 - [ ] Jonas giver øl
+- [ ] Jesper giver øl/eller spinner hjulet
 
 # Uge 6
 # 03/02
