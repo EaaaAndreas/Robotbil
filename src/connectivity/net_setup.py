@@ -181,3 +181,22 @@ def init_ap(name:str="Shitbox", password:str="WS69") -> None:
     wlan.active(True)
 
     print("[Network Connection] status", _netstats[wlan.status()])
+
+
+def get_ip():
+    return wlan.ipconfig('addr4')[0]
+
+def get_default_gateway():
+    ipa, subnet = wlan.ipconfig('addr4')
+    # IP:           00001010.01101110.00000000.01000110
+    # Subnet:       11111111.11111111.11111111.00000000
+    # IP & Subnet:  00001010.01101110.00000000.00000000
+    return '.'.join([str(int(i) & int(s)) for i, s in zip(ipa.split('.'), subnet.split('.'))])
+
+def get_broadcast_address():
+    ipa, subnet = wlan.ipconfig('addr4')
+    # IP:                       00001010.01101110.00000000.01000110
+    # Subnet:                   11111111.11111111.11111111.00000000
+    # ~Subnet & 0xFF:           00000000.00000000.00000000.11111111
+    # IP | (~subnet & 0xFF):    00001010.01101110.00000000.11111111
+    return '.'.join([str(int(i) | (~int(s) & 0xFF)) for i, s in zip(ipa.split('.'), subnet.split('.'))])
