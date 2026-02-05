@@ -4,7 +4,7 @@
 - [x] Vi skal have tegnet kalibrering og batteristatus på vores diagrammer
 - [ ] Jonas giver øl
 - [ ] Jesper giver øl/eller spinner hjulet
-
+- [ ] gør så man også kan vinde ved at spinde hjulet
 # Uge 6
 # 03/02
 > Teamleder: Jesper
