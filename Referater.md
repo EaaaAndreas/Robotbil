@@ -1,3 +1,6 @@
+**Turnus**
+Frederik -> Jonas -> Andreas -> Jesper
+
 # TODO
 - [ ] Vi skal have kigget på at lave statemachine på *sumo*-opgaven og skrevet den ind i funktions-diagrammet.
 - [x] Vi skal have genbesøgt vores kravspecifikation og have den renskrevet.
@@ -5,6 +8,13 @@
 - [ ] Jonas giver øl
 - [ ] Jesper giver øl/eller spinner hjulet
 - [ ] gør så man også kan vinde ved at spinde hjulet
+# Uge 7
+## 09/02
+> Teamleder: Frederik
+
+Jesper er på ferie
+
+
 # Uge 6
 ## 06/02
 > Teamleder: Andreas
