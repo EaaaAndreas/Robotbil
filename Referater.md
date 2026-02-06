@@ -6,7 +6,16 @@
 - [ ] Jesper giver øl/eller spinner hjulet
 - [ ] gør så man også kan vinde ved at spinde hjulet
 # Uge 6
-# 03/02
+## 06/02
+> Teamleder: Andreas
+
+Vi har været til møde med Fillip.
+
+Vi har færdiggjort og afleveret WBS + Critical path.
+
+- I.flg. CP skal vi i gang med programmering af motorer som det næste
+
+## 03/02
 > Teamleder: Jesper
 
 
