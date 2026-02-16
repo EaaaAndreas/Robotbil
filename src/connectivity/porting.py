@@ -1,25 +1,63 @@
 # src/connectivity/porting.py
-import socket
-from machine import Pin
-from connectivity.net_setup import wlan
+import usocket as socket
+from usocket import AF_INET, SOCK_DGRAM
+from net_setup import wlan, get_ip, get_broadcast_address
 
-indic = Pin(0, Pin.OUT, value=1)
+IP_ADDR: str|None = None
+PORT = 50001
+_addr = (IP_ADDR, PORT)
 
-led = Pin(2, Pin.OUT, value=0)
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-soc = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+_bound = False
+_connected = False
 
-soc.bind(("0.0.0.0", 5001))
+def is_bound() -> bool:
+    """
+    Check if the socket is bound to the port.
+    :return: True if the socket is bound, else False.
+    :rtype: bool
+    """
+    return _bound
 
-print(f'Listening for UDP on, {wlan.ipconfig('addr4')[0]}:5001')
+def is_connected() -> bool:
+    """
+    Check if the unit has an established connection to a client.
+    :return: True if the unit is connected to a client, else False.
+    :rtype: bool
+    """
+    return _connected
+
+def set_address(ip_addr:str, port:int|None=None) -> None:
+    global IP_ADDR, PORT, _addr
+    IP_ADDR = ip_addr
+    if port is not None:
+        PORT = PORT
+    _addr = (IP_ADDR, port)
 
 
-try:
-    while True:
-        data, addr = soc.recvfrom(1024)
-        print("Received from", addr, ":", data)
+def _init() -> None:
+    """
+    Initialize the socket. This checks if the socket is already open.
+    :return: None
+    """
+    global sock, _bound, _connected, IP_ADDR
+    if sock is None:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    if IP_ADDR is None:
+        set_address(get_ip())
+    if _bound:
+        if sock.getsockname() == _addr:
+            return
+        sock.bind(_addr)
+        _bound = True
 
-        led.toggle()
-except Exception as e:
-    indic.off()
-    raise e
+def broadcast():
+    global _connected
+    if _connected:
+        return
+    _init()
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    sock.settimeout(0.2)
+    while not _connected:
+        sock.sendto(b'Shitbox',(get_broadcast_address(), PORT))
