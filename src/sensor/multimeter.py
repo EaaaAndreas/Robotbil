@@ -10,7 +10,7 @@ class Voltmeter:
     """
     r1 = None
     r2 = None
-    def __init__(self, pin:int, r1:int|float|None, r2:int|float|None, v_sys:float|int=3.3) -> None:
+    def __init__(self, pin:int=26, r1:int|float|None=9900, r2:int|float|None=4700, v_sys:float|int=3.3) -> None:
         """
         Initialize the voltmeter
         :param pin: The ADC-pin number to use (remember to use AGND for ground). It's one of 26, 27, 28 on RP2
