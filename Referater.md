@@ -8,6 +8,13 @@ Frederik -> Jonas -> Andreas -> Jesper
 - [ ] Jonas giver øl
 - [ ] Jesper giver øl/eller spinner hjulet
 - [ ] gør så man også kan vinde ved at spinde hjulet
+
+# Uge 8
+## 16/02
+> Teamleder: Jonas
+
+Vi har lavet et modul til at måle spænding på batteriet
+
 # Uge 7
 ## 09/02
 > Teamleder: Frederik
