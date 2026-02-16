@@ -5,14 +5,24 @@
 - [ ] Jonas giver øl
 
 # Uge 6
-# 03/02
+## 04/02
+> Teamleder: Frederik
+
+### Dagens program
+Vi følger med i GitHub kurset
+## 03/02
 > Teamleder: Jesper
+### Dagens program
+- Vi skal lave funktionalitet til IR sensor (Jesper & Frederik)
+- Der ligger 2 afleveringer
+- 
 
 
 
 # Uge 5
 ## 30/01
 > Teamleder: Andreas
+
 
 Jonas har meldt afbud
 ### Dagens program:

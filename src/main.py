@@ -1,25 +1,21 @@
 # /main.py
 import socket
-from machine import Pin
-from connectivity.net_setup import wlan
-
-indic = Pin(0, Pin.OUT, value=1)
-
-led = Pin(2, Pin.OUT, value=0)
-
-soc = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-soc.bind(("0.0.0.0", 5001))
-
-print(f'Listening for UDP on, {wlan.ipconfig('addr4')[0]}:5001')
+import machine
+import ustruct
 
 
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 try:
-    while True:
-        data, addr = soc.recvfrom(1024)
-        print("Received from", addr, ":", data)
+    sock.bind(('0.0.0.0', 50001))
 
-        led.toggle()
-except Exception as e:
-    indic.off()
-    raise e
+    while True:
+        data, addr = sock.recvfrom(1024)
+        print(data[0], data[1:], addr)
+        if data[1:] == b'DISCOVER':
+            sock.sendto(bytes([data[0]]) + b'OFFER', addr)
+        elif data[1:] == b'REQUEST':
+            sock.sendto(bytes([data[0]]) + b'ACCEPT', addr)
+
+finally:
+    sock.close()

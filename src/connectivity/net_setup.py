@@ -37,6 +37,7 @@ def _check_file(path:str) -> bool|None:
     except OSError:
         return False
 
+
 def get_known_networks():
     """
     En generator funktion (brug `list(get_known_networks)` for at få en liste,
@@ -61,6 +62,7 @@ def get_known_networks():
             pss = None
         yield ssid, pss, bssid
     return
+
 
 def save_network(ssid:str|bytes, password:str|bytes|None, bssid:str|bytes|None=None) -> None:
     """
@@ -90,7 +92,8 @@ def save_network(ssid:str|bytes, password:str|bytes|None, bssid:str|bytes|None=N
     with open(SAVE_FILE_DIR, 'w', encoding="utf-8") as f:
         json.dump(networks, f)
 
-def init_wlan(ssid:str=None, password:str=None, bssid:str|None=None, hostname:str="Shitbox", auto_save:bool=True) -> None:
+
+def init_wlan(ssid:str=None, password:str=None, bssid:str|None=None, hostname:str="shitbox", auto_save:bool=True) -> None:
     """
     Opretter forbindelse til et netværk
     :param ssid: ssid'et på det netværk der skal oprettes forbindelse til.
@@ -152,6 +155,7 @@ def init_wlan(ssid:str=None, password:str=None, bssid:str|None=None, hostname:st
     # Log status
     print("[Network Connection] status", _netstats[wlan.status()])
 
+
 def init_ap(name:str="Shitbox", password:str="WS69") -> None:
     """
     Opret et access point, så der kan forbindes direkte til Picoen.
@@ -186,12 +190,14 @@ def init_ap(name:str="Shitbox", password:str="WS69") -> None:
 def get_ip():
     return wlan.ipconfig('addr4')[0]
 
+
 def get_default_gateway():
     ipa, subnet = wlan.ipconfig('addr4')
     # IP:           00001010.01101110.00000000.01000110
     # Subnet:       11111111.11111111.11111111.00000000
     # IP & Subnet:  00001010.01101110.00000000.00000000
     return '.'.join([str(int(i) & int(s)) for i, s in zip(ipa.split('.'), subnet.split('.'))])
+
 
 def get_broadcast_address():
     ipa, subnet = wlan.ipconfig('addr4')
