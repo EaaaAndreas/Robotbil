@@ -10,6 +10,15 @@ Frederik -> Jonas -> Andreas -> Jesper
 - [ ] gør så man også kan vinde ved at spinde hjulet
 
 # Uge 8
+## 17/02
+> Teamleder: Andreas
+
+Jesper kigger på Sumo - Start med at sørge for, at bilen kan holde sig inden for banen.
+Frederik kigger på wallfollow
+Jonas retter motormodulet til. Den skal kunne køre og dreje.
+
+Vi er næsten færdige med pico-delen af UDP. Der mangler lidt debugging. Ellers skal der arbejdes på PC-delen.
+
 ## 16/02
 > Teamleder: Jonas
 
