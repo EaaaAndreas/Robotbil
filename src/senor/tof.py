@@ -20,7 +20,7 @@ def tof():
 
     distance = time.ticks_diff(endtime , starttime) / 100 * 10
     print(distance, "mm") #print our data
-    time.sleep(1) #skift til 0.1 hvis den skal printe ud data hurtigere
+    time.sleep(0.1) #skift til 0.1 hvis den skal printe ud data hurtigere
     return distance
 
 if __name__ == '__main__':
