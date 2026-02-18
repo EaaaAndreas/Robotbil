@@ -5,9 +5,12 @@ from time import sleep
 class DCMotor:
     def __init__(self, pin_forward, pin_backward, pin_enable, trim=1.0, freq=1000):
         # Initialiser pins
+        # FIXME: Her er det dobbeltkonfekt at bruge Pin. det finder PWM selv ud af
         self.forward = PWM(Pin(pin_forward, Pin.OUT))
         self.backward = PWM(Pin(pin_backward, Pin.OUT))
         self.enable = PWM(Pin(pin_enable, Pin.OUT))
+
+        # FIXME: Ret mig, hvis jeg tager fejl. Men er det ikke kun `enable` der skal have PWM?
 
         self.forward.freq(freq)
         self.backward.freq(freq)
@@ -16,8 +19,12 @@ class DCMotor:
         # Trim skal sættes FØR stop
         self.trim = trim
 
+        # FIXME: Det er netop den trim vi skal have gjort dynamisk (afhængig af farten). Så den skal klares på en anden måde.
+
         # Tænd motoren
         self.enable.duty_u16(65535)
+
+        # FIXME: Hvorfor tænder vi motoren, bare for at stoppe den igen?
 
         # Stop motoren
         self.stop()
@@ -25,6 +32,8 @@ class DCMotor:
     def set_speed(self, speed):
         speed = max(-100, min(100, speed))
         duty = int(abs(speed) * 65535 / 100 * self.trim)
+
+        # FIXME: Bruger vi mere processing power på at løse 65535 / 100 selv, eller ved at sætte pigen til at gøre det 200 gange/sekund?
 
         if speed > 0:
             self.backward.duty_u16(0)
