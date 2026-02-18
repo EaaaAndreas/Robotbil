@@ -161,8 +161,8 @@ class UDPSocket:
         :return: None
         """
         for seq in self._pending:
-            # [SEQUENCE][BATTERY][PROGRAM][MESSAGE]
-            self.send(ustruct.pack('xBBB', seq, battery_status, program) + bytes(self._que[seq]))
+            # [SEQUENCE][BATTERY][PROGRAM][CADENCE][MESSAGE]
+            self.send(ustruct.pack('xBBBxB', seq, battery_status, program, self._timeout_ms) + bytes(self._que[seq]))
 
     def send(self, message:bytes, addr:tuple[str,int]=None) -> None:
         """

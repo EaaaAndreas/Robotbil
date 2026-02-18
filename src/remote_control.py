@@ -87,7 +87,7 @@ def run_server() -> None:
         # Send sidens indhold
         conn.sendall(response)
         # Stop med at sende
-        conn.close()
+        conn.close_socket()
 
 
 if __name__ == '__main__':
