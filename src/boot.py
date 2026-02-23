@@ -13,7 +13,7 @@ Bruges til ting der skal sættes op, før alt andet (fx. internet)
 board_led = Pin("LED", Pin.OUT, value=0)
 
 # Opret forbindelse til netværket
-init_wlan()
+init_wlan(hostname='shittest')
 
 # Tænd LED'en på boardet, så vi kan se at den er klar
 board_led.on()

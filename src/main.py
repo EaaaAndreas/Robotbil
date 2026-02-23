@@ -1,7 +1,9 @@
 # /main.py
 from connectivity.porting import *
+from football import *
+from battery import battery_status, bat_update
 
-
+PRG_SHT_DWN = -1
 PRG_NONE = 0
 PRG_FOOTBALL = 1
 PRG_WALL_FOLLOW = 2
@@ -19,15 +21,22 @@ def set_program(prg):
         CURRENT_PROGRAM = PRG_NONE
     return CURRENT_PROGRAM
 
-def ping(*_): #Ping
+def ping(*_):
+    # Return car parameters
     return CURRENT_PROGRAM #TODO: Add battery/others
 
+def get_battery_status():
+    return battery_status
 
 add_callback(ping)
 add_callback(set_program)
+add_callback(get_battery_status)
+add_callback(bat_update)
 
-# TODO: Add battery callback
-# TODO: Add football callback
+for cb in fb_callbacks:
+    # Add football callbacks
+    add_callback(cb)
+
 
 
 try:
