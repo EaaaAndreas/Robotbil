@@ -1,54 +1,28 @@
-**Turnus**
-Frederik -> Jonas -> Andreas -> Jesper
-
 # TODO
 - [ ] Vi skal have kigget på at lave statemachine på *sumo*-opgaven og skrevet den ind i funktions-diagrammet.
 - [x] Vi skal have genbesøgt vores kravspecifikation og have den renskrevet.
 - [x] Vi skal have tegnet kalibrering og batteristatus på vores diagrammer
 - [ ] Jonas giver øl
-- [ ] Jesper giver øl/eller spinner hjulet
-- [ ] gør så man også kan vinde ved at spinde hjulet
-
-# Uge 8
-## 17/02
-> Teamleder: Andreas
-
-Jesper kigger på Sumo - Start med at sørge for, at bilen kan holde sig inden for banen.
-Frederik kigger på wallfollow
-Jonas retter motormodulet til. Den skal kunne køre og dreje.
-
-Vi er næsten færdige med pico-delen af UDP. Der mangler lidt debugging. Ellers skal der arbejdes på PC-delen.
-
-## 16/02
-> Teamleder: Jonas
-
-Vi har lavet et modul til at måle spænding på batteriet
-
-# Uge 7
-## 09/02
-> Teamleder: Frederik
-
-Jesper er på ferie
-
 
 # Uge 6
-## 06/02
-> Teamleder: Andreas
+## 04/02
+> Teamleder: Frederik
 
-Vi har været til møde med Fillip.
-
-Vi har færdiggjort og afleveret WBS + Critical path.
-
-- I.flg. CP skal vi i gang med programmering af motorer som det næste
-
+### Dagens program
+Vi følger med i GitHub kurset
 ## 03/02
 > Teamleder: Jesper
+### Dagens program
+- Vi skal lave funktionalitet til IR sensor (Jesper & Frederik)
+- Der ligger 2 afleveringer
+- 
 
 
 
 # Uge 5
 ## 30/01
 > Teamleder: Andreas
+
 
 Jonas har meldt afbud
 ### Dagens program:
