@@ -1,10 +1,36 @@
 # src/football/football.py
 from motor import *
-
-
+import ustruct
 ACTIVE = False
 
-__all__ = ["start_football", "stop_football", "fb_callbacks"]
+
+__all__ = ["start_football", "stop_football", "fb_control"]
+
+
+def drive_r(power):
+    drive(-power)
+
+def right_r(power):
+    turn_right(-power)
+
+def left_r(power):
+    turn_left(-power)
+
+def stp(*_):
+    stop()
+
+_drive = {
+    b'W': drive,
+    b'A': turn_hard_left,
+    b'D': turn_hard_right,
+    b'S': drive_r,
+    b'Q': turn_left,
+    b'E': turn_right,
+    b'Z': left_r,
+    b'C': right_r,
+    b'X': stp,
+}
+
 
 def start_football():
     global ACTIVE
@@ -14,28 +40,11 @@ def stop_football():
     global ACTIVE
     ACTIVE = False
 
-def forward():
-    pass
-
-def backward():
-    pass
-
-def right():
-    pass
-
-def left():
-    pass
-
-def stop():
-    pass
-
-fb_callbacks = [
-    forward,
-    backward,
-    right,
-    left,
-    stop,
-]
-
-if __name__ == "__main__":
-    pass
+def fb_control(cmd:bytes):
+    if ACTIVE:
+        cmd, pwr = ustruct.unpack('sB', cmd)
+        _drive[cmd](pwr)
+        return 'BsB', int(ACTIVE), cmd, pwr
+    else:
+        stop()
+        return 'BsB', int(ACTIVE), b'X', 0

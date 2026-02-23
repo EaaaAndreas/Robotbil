@@ -1,6 +1,6 @@
 # src/connectivity/_porting.py
-
-__all__ = ["udp_task", "add_callback", "close_socket"] # Sets what functions are imported when doing `import *`
+import struct
+__all__ = ["udp_task", "add_callback", "close_socket", "connected"] # Sets what functions are imported when doing `import *`
 
 import socket
 import sys
@@ -10,7 +10,7 @@ __IS_MPY = sys.implementation.name == "micropython"
 connected = False
 _remote_addr:tuple[str,int]|None = None
 _connection_timeout_ms = 5000
-timer = 0
+_timer_ms = 0
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -45,7 +45,8 @@ else:
 callbacks = dict()
 
 def get_all_commands(timeout):
-    return b';'.join([f'{key}{cb.__name__}'.encode('ascii') for key, cb in callbacks.items()])
+    rep = b';'.join([f'{key}{cb.__name__}'.encode('ascii') for key, cb in callbacks.items()])
+    return str(len(rep)) + 's', rep
 
 callbacks[0] = get_all_commands
 
@@ -53,7 +54,7 @@ def set_timeout(timeout):
     global _connection_timeout_ms
     if timeout != 0: # Call set_timeout(0) to get timeout value instead of setting
         _connection_timeout_ms = timeout
-    return _connection_timeout_ms
+    return 'H', _connection_timeout_ms
 
 def add_callback(cb):
     global callbacks
@@ -65,6 +66,14 @@ add_callback(set_timeout)
 def send(seq:bytes, message:bytes):
     print(f"[UDP] Sending {seq}{message}")
     sock.sendto(seq + message, _remote_addr)
+
+def handle_callback(seq, data:bytes):
+    if data[0] in callbacks.keys():
+        if len(data) > 1:
+            fmt, *rep = callbacks[data[0]](data[1:])
+        else:
+            fmt, *rep = callbacks[data[0]]()
+        send(seq,struct.pack(fmt, *rep))
 
 def handle_message(data:bytes, addr:tuple):
     global _remote_addr, connected
@@ -93,6 +102,10 @@ def udp_task():
             handle_message(*message)
     except OSError:
         pass
+    if ticks_diff(ticks_ms(), _timer_ms) > _connection_timeout_ms:
+        global connected, _remote_addr
+        connected = False
+        _remote_addr = None
 
 if __name__ == '__main__':
     if __IS_MPY:
