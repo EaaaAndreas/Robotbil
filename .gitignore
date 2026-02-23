@@ -3,3 +3,4 @@ venv/
 .env/
 .idea/
 *.log
+/src/connectivity/crypto_key
