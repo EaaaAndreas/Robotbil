@@ -1,5 +1,5 @@
 from time import sleep
-from tof import tof
+from senor import tof
 from motor import *
 
 #################################################################
@@ -9,8 +9,6 @@ SM_TICK_MS        = 100
 DESIRED_DISTANCE  = 200
 WALL_DETECT       = 500
 THRESHOLD         = 20
-BASE_SPEED        = 60
-SENSITIVITY       = 0.6
 
 #################################################################
 # GLOBALS
@@ -39,33 +37,27 @@ EVENT_WALL_LOST              = False
 smActiveState = STATE_INIT
 
 #################################################################
-# MOTOR
-#################################################################
-def motor_forward(left, right):
-    print("L:", left, "R:", right)
-
-#################################################################
-# ACTIONS
+# MOTOR ACTIONS
 #################################################################
 
 def action_search_wall():
     print("ACTION: Searching wall")
-    motor_forward(60, 30)   # slow right turn
+    turn_right(40)
 
 
 def action_drive_straight():
     print("ACTION: Drive straight")
-    motor_forward(BASE_SPEED, BASE_SPEED)
+    drive(60)
 
 
 def action_adjust_left():
     print("ACTION: Adjust left (too close)")
-    motor_forward(BASE_SPEED - 20, BASE_SPEED + 20)
+    turn_left(60)
 
 
 def action_adjust_right():
     print("ACTION: Adjust right (too far)")
-    motor_forward(BASE_SPEED + 20, BASE_SPEED - 20)
+    turn_right(60)
 
 
 #################################################################
