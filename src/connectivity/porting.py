@@ -1,4 +1,4 @@
-# /main.py
+# src/connectivity/porting.py
 import socket
 from machine import Pin
 from connectivity.net_setup import wlan
