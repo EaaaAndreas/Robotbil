@@ -1,4 +1,6 @@
 # src/football/football.py
+from motor import *
+
 
 ACTIVE = False
 
