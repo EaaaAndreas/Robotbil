@@ -13,6 +13,14 @@ _connection_timeout_ms = 5000
 timer = 0
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+try:
+    sock.connect(('8.8.8.8', 80))
+    print(f"[UDP] Opened socket on '{sock.getsockname()}'")
+except:
+    pass
+
+
 sock.bind(('0.0.0.0', 54321))
 sock.settimeout(0)
 
@@ -20,7 +28,6 @@ def close_socket():
     sock.close()
 
 
-print(f"[UDP] Opened socket on '{sock.getsockname()}'")
 
 # ============================== Handle OS (dev) ==============================
 if __IS_MPY:
@@ -84,7 +91,7 @@ def udp_task():
         if message is not None:
             print(f"[UDP] Received '{message}'")
             handle_message(*message)
-    except OSError or TimeoutError:
+    except OSError:
         pass
 
 if __name__ == '__main__':
