@@ -5,15 +5,15 @@ sensor = ADC(26)   # <-- Correct class name
 
 def ir():
         value = sensor.read_u16()   # more accurate than .value()
-        print("Raw:", value)
 
-        if value < 20000:
-            print("BLACK LINE")
+        if value > 40000: #skidt 
+            #black line
+            result = True
         else:
-            print("WHITE SURFACE")
-
-        print()
-        time.sleep(0.1)
+            #white line
+            result = False
+        
+        return result
 
 if __name__ == '__main__':
     while True:
