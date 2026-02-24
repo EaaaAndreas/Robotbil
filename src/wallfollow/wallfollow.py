@@ -5,11 +5,11 @@ from motor import motortest as motor
 # CONFIG
 #################################################################
 SM_TICK_MS        = 10
-DESIRED_DISTANCE  = 250
+DESIRED_DISTANCE  = 300
 WALL_DETECT       = 600
 BASE_SPEED        = 60
-P_VALUE           = 0.4
-D_VALUE           = 1.2
+P_VALUE           = 0.2
+D_VALUE           = 1.0
 
 #################################################################
 # GLOBALS
@@ -41,8 +41,8 @@ smActiveState = STATE_INIT
 
 def action_search_wall():
     print("ACTION: Searching wall")
-    left_motor.set_speed(100)
-    right_motor.set_speed(40)
+    motor.left_motor.set_speed(100)
+    motor.right_motor.set_speed(40)
 
 
 def action_follow_wall():
@@ -74,8 +74,8 @@ def action_follow_wall():
     print("L:", left_speed, "R:", right_speed)
 
 #   Sends signal to the motors
-    left_motor.set_speed(left_speed)
-    right_motor.set_speed(right_speed)
+    motor.left_motor.set_speed(left_speed)
+    motor.right_motor.set_speed(right_speed)
 
 #   Sets the error to be the previous error for the next loop
     previous_error = error
