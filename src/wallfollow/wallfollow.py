@@ -10,6 +10,7 @@ WALL_DETECT       = 600
 BASE_SPEED        = 60
 P_VALUE           = 0.4
 D_VALUE           = 1.2
+previous_error    = 0
 
 #################################################################
 # GLOBALS
@@ -48,26 +49,37 @@ def action_search_wall():
 def action_follow_wall():
     global DISTANCE, previous_error
 
+#   Calculating the difference between the desired distance and the actual distance to the wall
     error = DESIRED_DISTANCE - DISTANCE
 
+#   immediate correction to the turning. The bigger the error, the bigger the turn
     P = P_VALUE * error
 
-    RATE_OF_CHANGE = error - privious_error
+#   calculating how fast the error is changing (RATE_OF_CHANGE).
+#   Rapid change increases steering correction, helping in sharp corners.
+    RATE_OF_CHANGE = error - previous_error
     D = D_VALUE * RATE_OF_CHANGE
 
+#   combining P (position correction) and D (change-based correction)
     turn = P + D
 
+#   Converting the Turn into the motor speeds. if turn is positive: turns left, if turn is negative: turns right
     left_speed  = BASE_SPEED - turn
     right_speed = BASE_SPEED + turn
 
-    # clamp
+#   clamping motor speeds, so they stay between -100 and 100
     left_speed  = max(-100, min(100, int(left_speed)))
     right_speed = max(-100, min(100, int(right_speed)))
 
+#   Prints the speed on each motor
     print("L:", left_speed, "R:", right_speed)
 
+#   Sends signal to the motors
     left_motor.set_speed(left_speed)
     right_motor.set_speed(right_speed)
+
+#   Sets the error to be the previous error for the next loop
+    previous_error = error
 
 
 def action_stop():
