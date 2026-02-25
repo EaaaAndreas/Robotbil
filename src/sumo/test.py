@@ -8,7 +8,7 @@ from sensor.ir import ir
 # CONFIG
 #################################################################
 SM_TICK_MS        = 10
-OBJECT_DETECT     = 1000     # mm
+OBJECT_DETECT     = 200     # mm
 BASE_SPEED        = 40
 ATTACK_SPEED      = 50
 TURN_SPEED        = 40
@@ -42,7 +42,7 @@ def action_search():
 
 
 def action_attack():
-    motor.left_motor.set_speed(ATTACK_SPEED * 0.80)
+    motor.left_motor.set_speed(int(ATTACK_SPEED * 0.8))
     motor.right_motor.set_speed(ATTACK_SPEED)
 
 
@@ -54,7 +54,6 @@ def action_roam():
 
 def action_escape():
     # Reverse
-    sleep_ms(10)
     motor.left_motor.set_speed(REVERSE_SPEED)
     motor.right_motor.set_speed(REVERSE_SPEED)
     sleep_ms(450)
@@ -62,7 +61,7 @@ def action_escape():
     # Turn away
     motor.left_motor.set_speed(TURN_SPEED)
     motor.right_motor.set_speed(-TURN_SPEED)
-    sleep_ms(600)
+    sleep_ms(400)
 
 
 def action_stop():
