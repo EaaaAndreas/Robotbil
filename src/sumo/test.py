@@ -37,23 +37,27 @@ search_counter = 0
 #################################################################
 
 def action_search():
+    print("search")
     motor.left_motor.set_speed(TURN_SPEED)
     motor.right_motor.set_speed(-TURN_SPEED)
 
 
 def action_attack():
+    print("attack")
     motor.left_motor.set_speed(int(ATTACK_SPEED * 0.8))
     motor.right_motor.set_speed(ATTACK_SPEED)
 
 
 def action_roam():
     # Slight curve so we scan while moving
+    print("roam")
     motor.left_motor.set_speed(BASE_SPEED)
     motor.right_motor.set_speed(BASE_SPEED - 10)
 
 
 def action_escape():
     # Reverse
+    print("escape")
     motor.left_motor.set_speed(REVERSE_SPEED)
     motor.right_motor.set_speed(REVERSE_SPEED)
     sleep_ms(450)
