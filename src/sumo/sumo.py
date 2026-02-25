@@ -10,7 +10,7 @@ from sensor.ir import ir
 SM_TICK_MS        = 10
 OBJECT_DETECT     = 400     # mm
 BASE_SPEED        = 40
-ATTACK_SPEED      = 40
+ATTACK_SPEED      = 50
 TURN_SPEED        = 40
 REVERSE_SPEED     = -60
 
@@ -42,7 +42,7 @@ def action_search():
 
 
 def action_attack():
-    motor.left_motor.set_speed(ATTACK_SPEED)
+    motor.left_motor.set_speed(ATTACK_SPEED * 0.75)
     motor.right_motor.set_speed(ATTACK_SPEED)
 
 
