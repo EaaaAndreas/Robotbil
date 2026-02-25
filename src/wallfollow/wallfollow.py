@@ -92,50 +92,53 @@ def check_wall_events():
 #################################################################
 # STATE MACHINE LOOP
 #################################################################
-def test():
+def wf_task():
     global smActiveState, EVENT_INIT_OK
     print('Testing WF')
+
+    update_sensors()
+    check_wall_events()
+    print(DISTANCE)
+    #############################################################
+    # STATE_INIT
+    #############################################################
+    if smActiveState == STATE_INIT:
+
+        if EVENT_INIT_OK:
+            print("INIT - SEARCH WALL")
+            action_stop()
+            smActiveState = STATE_SEARCH_WALL
+            EVENT_INIT_OK = False
+
+
+    #############################################################
+    # STATE_SEARCH_WALL
+    #############################################################
+    elif smActiveState == STATE_SEARCH_WALL:
+
+        if EVENT_WALL_LOST:
+            action_search_wall()
+
+        else:
+            print("Wall found - FOLLOW")
+            smActiveState = STATE_FOLLOW_WALL
+
+
+    #############################################################
+    # STATE_FOLLOW_WALL
+    #############################################################
+    elif smActiveState == STATE_FOLLOW_WALL:
+
+        if EVENT_WALL_LOST:
+            print("Wall lost - SEARCH")
+            smActiveState = STATE_SEARCH_WALL
+
+        else:
+            action_follow_wall()
+
+
+    sleep(SM_TICK_MS / 1000)
+
+def wf_loop():
     while True:
-
-        update_sensors()
-        check_wall_events()
-        print(DISTANCE)
-        #############################################################
-        # STATE_INIT
-        #############################################################
-        if smActiveState == STATE_INIT:
-
-            if EVENT_INIT_OK:
-                print("INIT - SEARCH WALL")
-                action_stop()
-                smActiveState = STATE_SEARCH_WALL
-                EVENT_INIT_OK = False
-
-
-        #############################################################
-        # STATE_SEARCH_WALL
-        #############################################################
-        elif smActiveState == STATE_SEARCH_WALL:
-
-            if EVENT_WALL_LOST:
-                action_search_wall()
-
-            else:
-                print("Wall found - FOLLOW")
-                smActiveState = STATE_FOLLOW_WALL
-
-
-        #############################################################
-        # STATE_FOLLOW_WALL
-        #############################################################
-        elif smActiveState == STATE_FOLLOW_WALL:
-
-            if EVENT_WALL_LOST:
-                print("Wall lost - SEARCH")
-                smActiveState = STATE_SEARCH_WALL
-
-            else:
-                action_follow_wall()
-
-
-        sleep(SM_TICK_MS / 1000)
+        wf_task()

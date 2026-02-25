@@ -1,6 +1,7 @@
 # /main.py
 from connectivity.porting import *
 from football import football as fb
+from wallfollow import wf_task
 from battery import battery_status, bat_update
 import motor
 
@@ -67,7 +68,7 @@ try:
             if CURRENT_PROGRAM == PRG_FOOTBALL:
                 fb.fb_task()
             elif CURRENT_PROGRAM == PRG_WALL_FOLLOW:
-                pass
+                wf_task()
             elif CURRENT_PROGRAM == PRG_SUMO:
                 pass
         except ConnectionTimeout:
