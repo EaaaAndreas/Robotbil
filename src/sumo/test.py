@@ -7,9 +7,9 @@ from sensor.ir import ir
 #################################################################
 # CONFIG
 #################################################################
-SM_TICK_MS        = 5
-OBJECT_DETECT     = 1500     # mm
-BASE_SPEED        = 60
+SM_TICK_MS        = 10
+OBJECT_DETECT     = 1000     # mm
+BASE_SPEED        = 40
 ATTACK_SPEED      = 50
 TURN_SPEED        = 40
 REVERSE_SPEED     = -60
@@ -54,6 +54,7 @@ def action_roam():
 
 def action_escape():
     # Reverse
+    sleep_ms(10)
     motor.left_motor.set_speed(REVERSE_SPEED)
     motor.right_motor.set_speed(REVERSE_SPEED)
     sleep_ms(450)
@@ -93,7 +94,6 @@ def sumo():
         # EDGE DETECTION (HIGHEST PRIORITY)
         #############################################################
         if EDGE_DETECTED:
-            print("STATE - EDGE_ESCAPE")
             smActiveState = STATE_EDGE_ESCAPE
 
         #############################################################
@@ -102,7 +102,6 @@ def sumo():
         if smActiveState == STATE_SEARCH:
 
             if DISTANCE < OBJECT_DETECT:
-                print("STATE - ATTACK")
                 smActiveState = STATE_ATTACK
                 search_counter = 0
 
@@ -111,7 +110,6 @@ def sumo():
                 search_counter += 1
 
                 if search_counter > SEARCH_TIMEOUT:
-                    print("STATE - ROAM")
                     smActiveState = STATE_ROAM
                     search_counter = 0
 
@@ -121,7 +119,6 @@ def sumo():
         elif smActiveState == STATE_ROAM:
 
             if DISTANCE < OBJECT_DETECT:
-                print("STATE - ATTACK")
                 smActiveState = STATE_ATTACK
 
             else:
@@ -133,7 +130,6 @@ def sumo():
         elif smActiveState == STATE_ATTACK:
 
             if DISTANCE > OBJECT_DETECT:
-                print("STATE - SEARCH")
                 smActiveState = STATE_SEARCH
             else:
                 action_attack()
@@ -143,9 +139,8 @@ def sumo():
         #############################################################
         elif smActiveState == STATE_EDGE_ESCAPE:
 
-            sleep_ms(150)
+            sleep_ms(100)
             action_escape()
-            print("STATE - SEARCH")
             smActiveState = STATE_SEARCH
             search_counter = 0
 
