@@ -36,7 +36,7 @@ smActiveState = STATE_INIT
 
 
 #################################################################
-# ACTIONS (Using your DCMotor objects directly)
+# ACTIONS
 #################################################################
 
 def action_search_wall():
