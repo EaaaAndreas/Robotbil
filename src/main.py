@@ -1,6 +1,6 @@
 # /main.py
 from connectivity.porting import *
-from football import *
+from football import football as fb
 from battery import battery_status, bat_update
 import motor
 
@@ -16,7 +16,7 @@ CURRENT_PROGRAM = PRG_NONE
 
 def stop_program():
     if CURRENT_PROGRAM == PRG_FOOTBALL:
-        stop_football()
+        fb.stop_football()
     motor.stop()
 
 def set_program(prg):
@@ -25,7 +25,7 @@ def set_program(prg):
         stop_program()
     if prg == PRG_FOOTBALL:
         CURRENT_PROGRAM = PRG_FOOTBALL
-        start_football()
+        fb.start_football()
     elif prg == PRG_WALL_FOLLOW:
         pass
     elif prg == PRG_SUMO:
@@ -36,25 +36,41 @@ def set_program(prg):
         CURRENT_PROGRAM = PRG_NONE
     return 'B', CURRENT_PROGRAM
 
-def ping(*_):
-    # Return car parameters
-    return 'BB', CURRENT_PROGRAM, battery_status #TODO: Add battery/others
+@command
+def program_select(prg:bytes):
+    prgs = {
+        b'NN': 0,
+        b'FB': 1,
+        b'WF': 2,
+        b'SU': 3
+    }
+    if prg in prgs:
+        set_program(prgs[prg])
+    else:
+        set_program(PRG_NONE)
+    return [k for k, v in prgs.items() if v == CURRENT_PROGRAM][0]
 
-def get_battery_status():
-    return 'B', battery_status
-
-add_callback(ping)
-add_callback(set_program)
-add_callback(get_battery_status)
-add_callback(bat_update)
-add_callback(fb_control)
+program_select.name = 'PRG'
 
 
+@command
+def football_control(*args, **kwargs):
+    return fb.fb_control(*args, **kwargs)
+
+football_control.name = 'FBC'
 
 try:
+    print('Running main loop')
     while True:
-        udp_task()
-        if not connected:
+        try:
+            udp_task()
+            if CURRENT_PROGRAM == PRG_FOOTBALL:
+                fb.fb_task()
+            elif CURRENT_PROGRAM == PRG_WALL_FOLLOW:
+                pass
+            elif CURRENT_PROGRAM == PRG_SUMO:
+                pass
+        except ConnectionTimeout:
             stop_program()
 
 finally:
