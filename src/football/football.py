@@ -44,7 +44,10 @@ def fb_control(cmd:bytes):
     if ACTIVE:
         cmd, pwr = ustruct.unpack('sB', cmd)
         _drive[cmd](pwr)
-        return 'BsB', int(ACTIVE), cmd, pwr
+        return f'{cmd}{pwr}{ACTIVE}'.encode('ascii')
     else:
         stop()
-        return 'BsB', int(ACTIVE), b'X', 0
+        return b'X\x00\x00'
+
+def fb_task():
+    pass

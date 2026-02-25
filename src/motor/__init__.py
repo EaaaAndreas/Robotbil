@@ -1,2 +1,2 @@
 # src/motor/__init__.py
-from motortest import *
+from motor.motortest import *
