@@ -14,7 +14,7 @@ ATTACK_SPEED      = 50
 TURN_SPEED        = 40
 REVERSE_SPEED     = -60
 
-SEARCH_TIMEOUT    = 85     # 200 ticks ≈ 2 seconds
+SEARCH_TIMEOUT    = 40     # 200 ticks ≈ 2 seconds
 
 #################################################################
 # STATES
@@ -40,14 +40,16 @@ def action_search():
     print("search")
     motor.left_motor.set_speed(TURN_SPEED)
     motor.right_motor.set_speed(-TURN_SPEED)
+    sleep_ms(300)
+    #gør så bilen tickseacher
+    motor.left_motor.set_speed(0)
+    motor.right_motor.set_speed(0)
     sleep_ms(50)
-
 
 def action_attack():
     print("attack")
     motor.left_motor.set_speed(int(ATTACK_SPEED * 0.8))
     motor.right_motor.set_speed(ATTACK_SPEED)
-    sleep_ms(50)
 
 
 def action_roam():
@@ -109,6 +111,7 @@ def sumo():
             else:
                 action_search()
                 search_counter += 1
+                print(search_counter)
 
                 if search_counter > SEARCH_TIMEOUT:
                     smActiveState = STATE_ROAM

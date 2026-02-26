@@ -8,13 +8,13 @@ from sensor.ir import ir
 # CONFIG
 #################################################################
 SM_TICK_MS        = 5
-OBJECT_DETECT     = 1500     # mm
+OBJECT_DETECT     = 700     # mm
 BASE_SPEED        = 60
 ATTACK_SPEED      = 50
 TURN_SPEED        = 40
 REVERSE_SPEED     = -60
 
-SEARCH_TIMEOUT    = 41     # 200 ticks ≈ 2 seconds
+SEARCH_TIMEOUT    = 85    # 200 ticks ≈ 2 seconds
 
 #################################################################
 # STATES
@@ -56,12 +56,7 @@ def action_escape():
     # Reverse
     motor.left_motor.set_speed(REVERSE_SPEED)
     motor.right_motor.set_speed(REVERSE_SPEED)
-    sleep_ms(450)
-
-    # Turn away
-    motor.left_motor.set_speed(TURN_SPEED)
-    motor.right_motor.set_speed(-TURN_SPEED)
-    sleep_ms(600)
+    sleep_ms(650)
 
 
 def action_stop():
@@ -143,7 +138,7 @@ def sumo():
         #############################################################
         elif smActiveState == STATE_EDGE_ESCAPE:
 
-            sleep_ms(150)
+            sleep_ms(100)
             action_escape()
             print("STATE - SEARCH")
             smActiveState = STATE_SEARCH
