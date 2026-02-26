@@ -5,7 +5,7 @@ sensor = ADC(26)   # <-- Correct class name
 
 def ir():
         value = sensor.read_u16()   # more accurate than .value()
-
+        print(sensor.read_u16())
         if value > 40000: #skidt 
             #black line
             result = True
