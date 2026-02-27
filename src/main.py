@@ -5,72 +5,72 @@ from wallfollow import wf_task
 from battery import battery_status, bat_update
 import motor
 
-PRG_SHT_DWN = -1
-PRG_NONE = 0
-PRG_FOOTBALL = 1
-PRG_WALL_FOLLOW = 2
-PRG_SUMO = 3
+from time import sleep_ms
+
+sleep_ms(500)
+print("Main")
+class Program:
+    shutdown = b'SD'
+    idle = b'NN'
+    football = b'FB'
+    wallfollow = b'WF'
+    sumo = b'SU'
+    all = [shutdown, idle, football, wallfollow, sumo]
 # If adding programs, remember to update `select_program`
 
 
-CURRENT_PROGRAM = PRG_NONE
+CURRENT_PROGRAM = Program.idle
 
 def stop_program():
-    if CURRENT_PROGRAM == PRG_FOOTBALL:
+    if CURRENT_PROGRAM == Program.football:
         fb.stop_football()
     motor.stop()
 
 def set_program(prg):
+    print("Setting program", prg)
     global CURRENT_PROGRAM
     if prg != CURRENT_PROGRAM:
         stop_program()
-    if prg == PRG_FOOTBALL:
-        CURRENT_PROGRAM = PRG_FOOTBALL
+    if prg == Program.football:
+        CURRENT_PROGRAM = Program.football
         fb.start_football()
-    elif prg == PRG_WALL_FOLLOW:
+    elif prg == Program.wallfollow:
         pass
-    elif prg == PRG_SUMO:
+    elif prg == Program.sumo:
         pass
-    elif prg == PRG_SHT_DWN:
+    elif prg == Program.shutdown:
         pass
     else:
-        CURRENT_PROGRAM = PRG_NONE
+        CURRENT_PROGRAM = Program.idle
     return 'B', CURRENT_PROGRAM
 
-@command
 def program_select(prg:bytes):
-    prgs = {
-        b'NN': 0,
-        b'FB': 1,
-        b'WF': 2,
-        b'SU': 3
-    }
-    if prg in prgs:
-        set_program(prgs[prg])
+    print(prg, Program.all)
+    if prg in Program.all:
+        set_program(prg)
     else:
-        set_program(PRG_NONE)
-    return [k for k, v in prgs.items() if v == CURRENT_PROGRAM][0]
+        set_program(Program.idle)
+    return CURRENT_PROGRAM
 
-program_select.name = 'PRG'
+def ping_data():
+    return CURRENT_PROGRAM
 
-
-@command
-def football_control(*args, **kwargs):
-    return fb.fb_control(*args, **kwargs)
-
-football_control.name = 'FBC'
+Command(program_select, '2s', 'PRG')
+Command(fb.fb_control, 'sB?', 'FBC')
+Command(bat_update, 'B', 'BAT')
 
 try:
     print('Running main loop')
     while True:
         try:
             udp_task()
-            if CURRENT_PROGRAM == PRG_FOOTBALL:
-                fb.fb_task()
-            elif CURRENT_PROGRAM == PRG_WALL_FOLLOW:
-                wf_task()
-            elif CURRENT_PROGRAM == PRG_SUMO:
-                pass
+            if connected:
+                if CURRENT_PROGRAM == Program.football:
+                    fb.fb_task()
+                elif CURRENT_PROGRAM == Program.wallfollow:
+                    wf_task()
+                elif CURRENT_PROGRAM == Program.sumo:
+                    pass
         except ConnectionTimeout:
             stop_program()
 
