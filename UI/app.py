@@ -1,16 +1,8 @@
 # src/app.py
 import tkinter as tk
 from tkinter import ttk
-import socket
+from udp import UDPClient, Command
 import struct
-from time import time, sleep
-from enum import Enum, auto
-
-class Status(Enum):
-    CONNECTED = auto()
-    CONNECTING = auto()
-    DISCONNECTED = auto()
-    CONNECTION_ERROR = auto()
 
 class Program:
     football = b'FB'
@@ -18,18 +10,20 @@ class Program:
     wall_follow = b'WF'
     idle = b'NN'
 
-
-REMOTE_ADDR = ('shittest1.local', 54321)
+REMOTE_ADDR = ('shitbox.local', 54321)
 ESTABLISH_CONNECTION_TIMEOUT = 30 # s
 CONNECTION_TIMEOUT = 5 # s
 
 def main():
     app = App()
-    app.mainloop()
+    try:
+        app.mainloop()
+    except Exception as e:
+        app.quit()
+        raise e
 
 class App(tk.Tk):
     _seq = 0
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     _remote_addr = REMOTE_ADDR[0]
     _remote_port = REMOTE_ADDR[1]
     _timeout_timer = 0
@@ -41,198 +35,101 @@ class App(tk.Tk):
         self.minsize(600,400)
         self.option_add('*tearOff', False)
 
-        self.sock.settimeout(5)
-        self.sock.bind(('0.0.0.0', 0))
+        self.cli = UDPClient()
+        self.cli.on_state_change = self.on_state_change
+        self.cli.on_receive = self.on_recv
+
         # ========== Shared Variables ==========
-        self.connection_status = tk.StringVar(self, Status.DISCONNECTED, "CONN_STATUS")
-        #self.connected = tk.BooleanVar(self, False, "CONNECTED")
+        self.connection_status = tk.StringVar(self, "DISCONNECTED", "CONN_STATUS")
+        self.program = tk.StringVar(self, "Off", "PROGRAM")
+        self.current_program = tk.StringVar(self, "Off", "CURRENT_PROGRAM")
         self.battery_status = tk.IntVar(self, 0, "BATTERY")
-        self.program = tk.StringVar(self, 'Off', "PROGRAM")
-        self.next_program = tk.StringVar(self, 'Off', 'NEXTPRG')
 
         # ========== Keybinds ==========
         self.bind('<Control-q>', self.cmd_quit)
-        self.bind('<Control-w>', self.stop_slave)
-        self._ast = self.connection_status.trace_add("write", self._autostart_ping)
 
+        # ========== Widgets ==========
+        # ----- Connection -----
         self.conn_widget = ConnectWidget(self)
         self.conn_widget.grid(row=0, column=0)
-        self.connection_status.trace_add('write', self.conn_widget.update_fmt)
 
-        #self.conn_button = ttk.Button(self, text='Connect', command=self.connect)
-        #self.conn_button.grid(row=0, column=2, padx=20)
-        #self.conn_battery = ttk.Progressbar(self, maximum=255, variable=self.battery_status)
-        #)self.conn_battery.grid(row=0, column=3, padx=20)
 
-        self.prg_label = ttk.Label(self, textvariable=self.program)
-        self.prg_label.grid(row=1,column=0)
-        self.fb_widget = FootballWidget(self)
-        self.fb_widget.grid(row=2,column=0)
-
+        # ----- Program -----
+        self.prg_label = ttk.Label(self, textvariable=self.current_program)
+        self.prg_label.grid(row=1,column=0, columnspan=2)
         self.prg_drp_dwn = ttk.Combobox(
-            values=['Off', 'Football', 'Sumo', 'Wallfollow'],
-            #validate='all',
-            #validatecommand=self.cmd_selected_program,
-            textvariable=self.next_program,
+            values=['Off', 'Football', 'Sumo', 'Wall follow'],
+            textvariable=self.program,
             state='normal'
         )
-        self.prg_drp_dwn.grid(row=1, column=1)
-        self.prg_confirm = ttk.Button(text="Update program", state='normal', command=self.set_program)
-        self.prg_confirm.grid(row=1, column=2)
+        self.prg_drp_dwn.bind('<Return>', self.cmd_set_program)
+        self.prg_drp_dwn.grid(row=2, column=0)
+        self.prg_confirm = ttk.Button(text="Update program", state='normal', command=self.cmd_set_program)
+        self.prg_confirm.grid(row=2, column=1)
 
-
-        #self.fb_widget = FootballWidget(self)
-        #self.fb_widget.grid(row=2, column=0, columnspan=4)
-
-    def set_conn(self, val:bool):
-        self.connected.set(val)
-        idx = int(val)
-        state = ['disabled', 'normal'][idx]
-        self.conn_status.config(text=['Disconnected', 'Connected'][idx], foreground=['crimson', 'darkgreen'][idx])
-        self.conn_button.config(text=['Connect', 'Disconnect'][idx], command=[self.cmd_connect, self.cmd_disconnect][idx])
-        self.prg_drp_dwn.config(state=state)
-        self.prg_confirm.config(state=state)
+        # ----- Football -----
+        self.fb_widget = FootballWidget(self)
+        self.fb_widget.grid(row=3,column=0)
 
     def cmd_quit(self, event=None):
-        self.disconnect()
-        self.sock.close()
         self.quit()
 
-    def cmd_selected_program(self, event=None):
-        if self.next_program.get() != self.program.get():
-            self.prg_confirm['state'] = 'disabled'
+    def quit(self):
+        self.cli.disconnect()
+        self.after(50, super().quit)
+
+    def cmd_set_program(self, event=None):
+        self.set_program()
+
+    def on_state_change(self, state):
+        self.connection_status.set(state)
+        self.after(5, self.update_widgets)
+
+    def on_recv(self, data):
+        cmd = data[2:5]
+        data = data[5:]
+        print("ON Received", cmd, data)
+        self.battery_status.set(self.cli.battery.value or 0)
+        if cmd == Command.program:
+            match data:
+                case Program.idle:
+                    self.current_program.set('Off')
+                case Program.wall_follow:
+                    self.current_program.set('Wall Follow')
+                case Program.sumo:
+                    self.current_program.set('Sumo')
+                case Program.football:
+                    self.current_program.set('Football')
+        self.update_widgets()
+
+    def update_widgets(self):
+        self.conn_widget.update_fmt()
+        if self.connection_status.get() == 'CONNECTED':
+            self.prg_drp_dwn.config(state='normal')
+            self.prg_confirm.config(state='normal')
         else:
-            self.prg_confirm['state'] = 'normal'
-        return True
+            self.prg_drp_dwn.config(state='disabled')
+            self.prg_confirm.config(state='disabled')
+        self.fb_widget.update_fmt()
 
-    def _sendto(self, message:bytes, remote_addr=None):
-        if isinstance(message, str):
-            message = message.encode('ascii')
-        seq = self._seq
-        print(f"[UDP] Sending '{struct.pack('BB', *divmod(seq, 255)) + message}' to {remote_addr or self.remote_addr}")
-        self.sock.sendto(struct.pack('BB', *divmod(seq,255)) + message, remote_addr or self.remote_addr)
-        self._seq += 1
-        return seq
-
-    def sendto(self, message:bytes):
-        print("Sending", message, self.connection_status.get())
-        if self.connection_status.get() == Status.CONNECTED:
-            return self._sendto(message)
-        raise IOError(f"Couldn't send message. Not connected.")
-
-    def _recv(self, remote_addr=None):
-        try:
-            message = self.sock.recvfrom(1024)
-            if message is not None:
-                print(f"[UDP] Received '{message}'")
-                if len(message[0]) > 2:
-                    data, addr = message
-                    seq = data[0] * 255 + data[1]
-                    data = data[2:]
-                    if seq < self._seq:
-                        if self.connection_status.get() != Status.CONNECTED:
-                            return seq, data, addr
-                        elif addr == (remote_addr or self.remote_addr):
-                            self._timeout_timer = time()
-                            return seq, data
-        except BlockingIOError:
-            pass
-        return None
-    
-    @property
-    def conn_status(self):
-        return self.connection_status.get()
-    
-    @conn_status.setter
-    def conn_status(self, value):
-        self.connection_status.set(value)
-    
-    
     def connect(self):
-        if self.is_connected():
-            raise ConnectionAbortedError(f"Already connected")
-        print('[UDP-connect] Establishing connection')
-        remote_addr = None
-        self.connection_status.set(Status.CONNECTING)
-        print('[UDP-connect] Connecting', self.connection_status.get(), self.is_connected())
-        seq = self._sendto(b'DISCOVER', REMOTE_ADDR)
-        t0 = time()
-        while time() - t0 < ESTABLISH_CONNECTION_TIMEOUT:
-            message = self._recv(remote_addr)
-            if message is not None:
-                print(f"[UDP-connect] received message '{message}'")
-                rseq, data, addr = message
-                if rseq == seq:
-                    print(rseq, data, addr, remote_addr)
-                    if data == b'OFFER':
-                        print('[UDP-connect] Identified offer. Sending request')
-                        seq = self._sendto(b'REQUEST')
-                        remote_addr = addr
-                    elif data == b'ACCEPT' and remote_addr == addr:
-                        self.connection_status.set(Status.CONNECTED)
-                        print(f"[UDP-connect] Connected to '{self.remote_addr}'", self.connection_status.get(), self.is_connected())
-                        return
-                else:
-                    print(f"[UDP-connect] Unmatched sequence number '{seq}'")
-        self.connection_status.set(Status.CONNECTION_ERROR)
-        raise TimeoutError(f"Took too long to connect")
-
-    def _ping(self):
-        self.sendto(b'PIN')
-        print(self.recv())
-
-    def _ping_loop(self):
-        with self._communicating:
-            while self._pinging:
-                self._ping()
-                sleep(1)
-
-    def _autostart_ping(self, *_):
-        if self.is_connected():
-            self.after(10, self.start_ping_loop)
-            self.connection_status.trace_remove('write', self._ast)
-
-    def stop_ping_loop(self):
-        if self._pinging:
-            self._pinging = False
-        self._ast = self.connection_status.trace_add('write', self._autostart_ping)
+        self.cli.connect(*REMOTE_ADDR)
 
     def disconnect(self):
-        pass
+        self.cli.disconnect()
 
     def set_program(self):
-        match self.next_program.get():
-            case 'Football':
-                self.program.set('Football')
-                prg = Program.football
-            case 'Sumo':
-                self.program.set('Sumo')
-                prg = Program.sumo
-            case 'Wall Follow':
-                self.program.set('Wall Follow')
-                prg = Program.wall_follow
-            case _:
-                self.program.set('Off')
-                prg = Program.idle
-        self._sendto(b'PRG' + prg)
-
-    def stop_slave(self, event=None):
-        pass
-
-    @property
-    def remote_name(self):
-        return self._remote_addr
-
-    @property
-    def remote_port(self):
-        return self._remote_port
-
-    @property
-    def remote_addr(self):
-        return self.remote_name, self.remote_port
-
-    def is_connected(self):
-        return self.connection_status.get() == Status.CONNECTED
+        cmds = {
+            'Football': b'FB',
+            'Off': b'NN',
+            'Sumo': b'SU',
+            'Wall Follow': b'WF'
+        }
+        if self.program.get() in cmds:
+            cmd = cmds[self.program.get()]
+        else:
+            cmd = cmds['Off']
+        self.cli.send(Command.program + cmd)
 
 class ConnectWidget(tk.Frame):
     def __init__(self, master:App, *args, **kwargs):
@@ -241,7 +138,7 @@ class ConnectWidget(tk.Frame):
         #self.master.connection_status.trace_add("write", self.update_fmt)
         # ========== UI Elements ==========
         ttk.Label(self, name='conn_header', text='Status').grid(row=0, column=0, columnspan=3)
-        self.stat_label = ttk.Label(self, name="conn_label", text='Disconnected', foreground='crimson')
+        self.stat_label = ttk.Label(self, name="conn_label", foreground='crimson', textvariable=master.connection_status)
         self.stat_label.grid(row=1, column=0)
         self.conn_button = ttk.Button(self, name="conn_button", text='Connect', command=self.cmd_connect)
         self.conn_button.grid(row=1, column=1, padx=20)
@@ -250,39 +147,30 @@ class ConnectWidget(tk.Frame):
 
     def update_fmt(self, *_):
         match self.master.connection_status.get():
-            case Status.CONNECTED:
+            case 'CONNECTED':
                 self.fmt_connected()
-            case Status.CONNECTING:
-                self.fmt_connecting()
-            case _:
+            case 'DISCONNECTED':
                 self.fmt_disconnected()
+            case 'CONNECTING':
+                self.fmt_connecting()
 
     def fmt_connected(self):
-        self.stat_label.config(text='Connected', foreground='darkgreen')
+        self.stat_label.config(foreground='darkgreen')
         self.conn_button.config(text='Disconnect', command=self.cmd_disconnect)
 
     def fmt_disconnected(self):
-        self.stat_label.config(text='Disconnected', foreground='Crimson')
+        self.stat_label.config(foreground='Crimson')
         self.conn_button.config(text='Connect', command=self.cmd_connect)
 
     def fmt_connecting(self):
-        self.stat_label.config(text='Connecting...', foreground='black')
-        self.conn_button.config(text='Abort', command=self.cmd_abort_connection)
+        self.stat_label.config(foreground='black')
+        self.conn_button.config(text='Abort', command=self.cmd_disconnect)
 
     def cmd_connect(self):
         self.master.connect()
 
-
-    def cmd_abort(self):
-        self.conn_button['state'] = 'disabled'
-        self.stat_label['text'] = 'aborting'
-        pass
-
     def cmd_disconnect(self):
-        pass
-
-    def cmd_abort_connection(self):
-        pass
+        self.master.disconnect()
 
 class FootballWidget(tk.Frame):
     def __init__(self, master:App, *args, **kwargs):
@@ -308,6 +196,8 @@ class FootballWidget(tk.Frame):
 
         self.spd_adjust = ttk.Scale(self,orient='vertical', to=255, variable=self.speed)
         self.spd_adjust.grid(row=0, column=4, rowspan=3, padx=20)
+
+        self.fmt_disabled()
 
     def update_buttons(self):
         self.fwd['state'] = 'active' if 'w' in self.pressed else 'normal'
@@ -336,7 +226,6 @@ class FootballWidget(tk.Frame):
                     self.pressed.discard('x')
                     self.pressed.add('d')
         self.update_buttons()
-        self.send_command()
 
     def send_command(self):
         cmd = b'FBC'
@@ -357,7 +246,7 @@ class FootballWidget(tk.Frame):
         else:
             cmd += b'X'
         cmd += struct.pack('B', self.speed.get())
-        self.master._sendto(cmd)
+
 
     def on_key_release(self, event):
         key = event.keysym.lower()
@@ -373,6 +262,29 @@ class FootballWidget(tk.Frame):
         if len(self.pressed) == 0:
             self.pressed.add('x')
         self.update_buttons()
+
+    def fmt_normal(self):
+        self.fwd['state'] = 'normal'
+        self.bck['state'] = 'normal'
+        self.lef['state'] = 'normal'
+        self.rig['state'] = 'normal'
+        self.stp['state'] = 'normal'
+        self.spd_adjust['state'] = 'normal'
+
+    def fmt_disabled(self):
+        self.fwd['state'] = 'disabled'
+        self.bck['state'] = 'disabled'
+        self.lef['state'] = 'disabled'
+        self.rig['state'] = 'disabled'
+        self.stp['state'] = 'disabled'
+        self.spd_adjust['state'] = 'disabled'
+
+    def update_fmt(self):
+        print("Updating football fmt", self.master.connection_status.get(), self.master.current_program.get())
+        if self.master.connection_status.get() == "CONNECTED" and self.master.current_program.get() == "Football":
+            self.fmt_normal()
+        else:
+            self.fmt_disabled()
 
     class DummyPress:
         def __init__(self, key:str):
@@ -391,7 +303,7 @@ class FootballWidget(tk.Frame):
     def cmd_lef(self):
         pass
     def cmd_stop(self):
-        pass
+        self.on_key_press(self.DummyPress('x'))
 
 if __name__ == "__main__":
     main()
