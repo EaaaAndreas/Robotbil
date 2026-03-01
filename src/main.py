@@ -1,47 +1,80 @@
 # /main.py
-from connectivity.porting import *
-from football import *
-from battery import battery_status, bat_update
+from time import sleep_ms
 
-PRG_SHT_DWN = -1
-PRG_NONE = 0
-PRG_FOOTBALL = 1
-PRG_WALL_FOLLOW = 2
-PRG_SUMO = 3
+sleep_ms(1000)
+print("Main")
+
+from connectivity.porting import *
+from football import football as fb
+from wallfollow import wallfollow as wf
+from sumo import sumo as su
+from battery import battery_status, bat_update
+import motor
+
+class Program:
+    shutdown = b'SD'
+    idle = b'NN'
+    football = b'FB'
+    wallfollow = b'WF'
+    sumo = b'SU'
+    all = [shutdown, idle, football, wallfollow, sumo]
+
 # If adding programs, remember to update `select_program`
 
+CURRENT_PROGRAM = Program.idle
 
-CURRENT_PROGRAM = PRG_NONE
+
+def stop_program():
+    if CURRENT_PROGRAM == Program.football:
+        fb.stop_football()
+    motor.stop()
 
 def set_program(prg):
+    print("Setting program", prg)
     global CURRENT_PROGRAM
-    if prg in (PRG_NONE, PRG_FOOTBALL, PRG_WALL_FOLLOW, PRG_SUMO):
+    if prg != CURRENT_PROGRAM:
+        stop_program()
+    if prg == Program.football:
+        CURRENT_PROGRAM = Program.football
+        fb.start_football()
+    elif prg in Program.all:
         CURRENT_PROGRAM = prg
     else:
-        CURRENT_PROGRAM = PRG_NONE
-    return CURRENT_PROGRAM
+        CURRENT_PROGRAM = Program.idle
+    return CURRENT_PROGRAM,
 
-def ping(*_):
-    # Return car parameters
-    return CURRENT_PROGRAM #TODO: Add battery/others
+def program_select(prg:bytes):
+    print(prg, Program.all)
+    if prg in Program.all:
+        set_program(prg)
+    else:
+        set_program(Program.idle)
+    return CURRENT_PROGRAM,
 
-def get_battery_status():
-    return battery_status
+def ping_data():
+    return CURRENT_PROGRAM,
 
-add_callback(ping)
-add_callback(set_program)
-add_callback(get_battery_status)
-add_callback(bat_update)
-
-for cb in fb_callbacks:
-    # Add football callbacks
-    add_callback(cb)
-
-
+Command(program_select, '2s', 'PRG')
+Command(fb.fb_control, '2sBB', 'FBC')
+Command(bat_update, 'B', 'BAT')
+Command(ping_data, '2s', 'PIN')
 
 try:
+    print('Running main loop')
     while True:
-        udp_task()
+        try:
+            udp_task()
+            if isconnected():
+                if CURRENT_PROGRAM == Program.football:
+                    #fb.fb_task()
+                    pass
+                elif CURRENT_PROGRAM == Program.wallfollow:
+                    wf.wf_task()
+                elif CURRENT_PROGRAM == Program.sumo:
+                    su.sumo_task()
+        except ConnectionTimeout:
+            stop_program()
+
 finally:
     close_socket()
 

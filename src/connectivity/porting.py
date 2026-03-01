@@ -1,91 +1,115 @@
 # src/connectivity/_porting.py
-
-__all__ = ["udp_task", "add_callback", "close_socket"] # Sets what functions are imported when doing `import *`
-
+import struct
+__all__ = ["ConnectionTimeout","udp_task", "close_socket", "isconnected", "test", "Command"] # Sets what functions are imported when doing `import *`
+from time import ticks_ms, ticks_diff
 import socket
-import sys
-__IS_MPY = sys.implementation.name == "micropython"
+print("UDP - init")
+
+class ConnectionTimeout(BaseException):
+    pass
 
 # ============================== Setup ==============================
 connected = False
 _remote_addr:tuple[str,int]|None = None
 _connection_timeout_ms = 5000
-timer = 0
+_timer_ms = ticks_ms()
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-try:
-    sock.connect(('8.8.8.8', 80))
-    print(f"[UDP] Opened socket on '{sock.getsockname()}'")
-except:
-    pass
-
-
 sock.bind(('0.0.0.0', 54321))
 sock.settimeout(0)
+
+def isconnected():
+    return connected
+
 
 def close_socket():
     sock.close()
 
 
+def update_timer():
+    global _timer_ms
+    _timer_ms = ticks_ms()
 
-# ============================== Handle OS (dev) ==============================
-if __IS_MPY:
-    from time import ticks_ms, ticks_diff
-else:
-    from time import time_ns
-    def ticks_ms() -> int:
-        return int(time_ns() / 1000)
-    def ticks_diff(t0:int, t1:int):
-        return t0 - t1
+# ============================== Commands ==============================
+
+commands = {}
+class Command:
+    _name = b''
+    def __init__(self, fn, output_type: str, name: str | bytes):
+        self.fn = fn
+        self.output_type = output_type
+        self.name = name
+
+        self._last_called = ticks_ms()
+        commands[name] = self
+
+    @property
+    def name(self) -> bytes:
+        return self._name
+
+    @name.setter
+    def name(self, value:str|bytes):
+        if len(value) != 3:
+            raise ValueError(f"Command name must be exactly 3 characters. Got '{value}'")
+        if isinstance(value, str):
+            value = value.encode('ascii')
+        if self._name in commands.keys():
+            commands.pop(self._name)
+        self._name = value
+        commands[self._name] = self
+
+    def __call__(self, *args:bytes):
+        print(self.name, args)
+        ans = tuple(self.fn(*args))
+        print(ans)
+        return self.name + struct.pack(self.output_type, *ans)
 
 
-# ============================== Callbacks ==============================
-
-callbacks = dict()
-
-def get_all_commands(timeout):
-    return b';'.join([f'{key}{cb.__name__}'.encode('ascii') for key, cb in callbacks.items()])
-
-callbacks[0] = get_all_commands
-
-def set_timeout(timeout):
-    global _connection_timeout_ms
-    if timeout != 0: # Call set_timeout(0) to get timeout value instead of setting
-        _connection_timeout_ms = timeout
-    return _connection_timeout_ms
-
-def add_callback(cb):
-    global callbacks
-    cmd = max(list(callbacks.keys())) + 1
-    callbacks[cmd] = cb
-
-add_callback(set_timeout)
+# ============================== Transmitting ==============================
 
 def send(seq:bytes, message:bytes):
     print(f"[UDP] Sending {seq}{message}")
     sock.sendto(seq + message, _remote_addr)
 
+
 def handle_message(data:bytes, addr:tuple):
-    global _remote_addr, connected
+    global _remote_addr, connected, _connection_timeout_ms
     if len(data) > 2:
         seq = data[:2]
         data = data[2:]
-        print(seq, data)
         if connected: # The unit is connected
-            if data[0] in callbacks.keys():
-                send(seq, callbacks[data[0]](data[1:]))
+            cmd = data[:3]
+            data = data[3:]
+            #if cmd == b'PIN':
+            #    send(seq, b'ACK')
+            if cmd == b'DSC':
+                send(seq, b'DSC')
+                connected = False
+                _remote_addr = None
+            else:
+                connected = True
+                try:
+                    if len(data):
+                        send(seq, commands[cmd](data))
+                    else:
+                        send(seq, commands[cmd]())
+                except KeyError:
+                    send(seq, b"ERR")
+            _connection_timeout_ms = ticks_ms()
         elif _remote_addr is not None: # The unit is establishing a connection
             if addr == _remote_addr and data == b'REQUEST':
                 send(seq, b'ACCEPT')
                 connected = True
+                update_timer()
         else: # The unit has no connection
             if seq == b'\x00\x00' and data == b'DISCOVER':
                 print(f"[UDP] Received discover from '{addr}'")
                 _remote_addr = addr
                 send(seq, b'OFFER')
 
+
 def udp_task():
+    global connected, _remote_addr
     try:
         message = sock.recvfrom(1024)
         if message is not None:
@@ -93,16 +117,15 @@ def udp_task():
             handle_message(*message)
     except OSError:
         pass
+    if connected and ticks_diff(ticks_ms(), _timer_ms) > _connection_timeout_ms:
+        print('[UDP] Dropping connection')
+        send(b'\xff\xff', b'CTO') # ConnectionTimeOut
+        connected = False
+        _remote_addr = None
+        raise ConnectionTimeout
 
-if __name__ == '__main__':
-    if __IS_MPY:
-        from connectivity.net_setup import init_wlan, wlan
-        init_wlan()
-        while not wlan.isconnected():
-            pass
-    def ping():
-        return "pong"
-    add_callback(ping)
+
+def test():
     try:
         while True:
             udp_task()

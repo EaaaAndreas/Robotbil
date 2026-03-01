@@ -1,71 +1,83 @@
 from time import sleep
 from sensor.tof import tof
 from motor import motortest as motor
+
 #################################################################
 # CONFIG
 #################################################################
-SM_TICK_MS        = 10
-DESIRED_DISTANCE  = 200
-WALL_DETECT       = 500
-BASE_SPEED        = 60
-SENSITIVITY       = 0.4
+SM_TICK_MS = 10
+DESIRED_DISTANCE = 400
+WALL_DETECT = 600
+BASE_SPEED = 100
+P_VALUE = 0.2
+I_VALUE = 0.8
 
 #################################################################
 # GLOBALS
 #################################################################
 DISTANCE = 0
-
+previous_error = 0
 #################################################################
 # STATES
 #################################################################
-STATE_INIT         = 0
-STATE_SEARCH_WALL  = 1
-STATE_FOLLOW_WALL  = 2
+STATE_SEARCH_WALL = 0
+STATE_FOLLOW_WALL = 1
 
 #################################################################
 # EVENTS
 #################################################################
-EVENT_INIT_OK                = True
-EVENT_WALL_LOST              = False
+EVENT_WALL_LOST = False
 
 #################################################################
 # START STATE
 #################################################################
-smActiveState = STATE_INIT
+smActiveState = STATE_SEARCH_WALL
 
 
 #################################################################
-# ACTIONS (Using your DCMotor objects directly)
+# ACTIONS
 #################################################################
 
 def action_search_wall():
     print("ACTION: Searching wall")
-    motor.left_motor.set_speed(40)
-    motor.right_motor.set_speed(10)
+    motor.left_motor.set_speed(100)
+    motor.right_motor.set_speed(40)
 
 
 def action_follow_wall():
-    global DISTANCE
+    global DISTANCE, previous_error
 
+    #   Calculating the difference between the desired distance and the actual distance to the wall
     error = DESIRED_DISTANCE - DISTANCE
-    turn  = SENSITIVITY * error
 
-    left_speed  = BASE_SPEED - turn
+    #   immediate correction to the turning. The bigger the error, the bigger the turn
+    P = P_VALUE * error
+
+    #   calculating how fast the error is changing (RATE_OF_CHANGE).
+    #   Rapid change increases steering correction, helping in sharp corners.
+    RATE_OF_CHANGE = error - previous_error
+    I = I_VALUE * RATE_OF_CHANGE
+
+    #   combining P (position correction) and I (change-based correction)
+    turn = P + I
+
+    #   Converting the Turn into the motor speeds. if turn is positive: turns left, if turn is negative: turns right
+    left_speed = BASE_SPEED - turn
     right_speed = BASE_SPEED + turn
 
-    # clamp
-    left_speed  = max(-100, min(100, int(left_speed)))
+    #   clamping motor speeds, so they stay between -100 and 100
+    left_speed = max(-100, min(100, int(left_speed)))
     right_speed = max(-100, min(100, int(right_speed)))
 
+    #   Prints the speed on each motor
     print("L:", left_speed, "R:", right_speed)
 
+    #   Sends signal to the motors
     motor.left_motor.set_speed(left_speed)
     motor.right_motor.set_speed(right_speed)
 
-
-def action_stop():
-    print("ACTION: Stop")
-    motor.stop()
+    #   Sets the error to be the previous error for the next loop
+    previous_error = error
 
 
 #################################################################
@@ -82,8 +94,8 @@ def update_sensors():
 def check_wall_events():
     global EVENT_WALL_LOST
 
-    # Reset events
-    EVENT_WALL_LOST     = False
+    # Reset event
+    EVENT_WALL_LOST = False
 
     if DISTANCE > WALL_DETECT:
         EVENT_WALL_LOST = True
@@ -92,50 +104,46 @@ def check_wall_events():
 #################################################################
 # STATE MACHINE LOOP
 #################################################################
-def test():
-    global smActiveState, EVENT_INIT_OK
+def wf_task():
+    global smActiveState
     print('Testing WF')
+
+    update_sensors()
+    check_wall_events()
+    print(DISTANCE)
+
+    #############################################################
+    # STATE_SEARCH_WALL
+    #############################################################
+    if smActiveState == STATE_SEARCH_WALL:
+
+        if EVENT_WALL_LOST:
+            action_search_wall()
+
+        else:
+            print("Wall found - FOLLOW")
+            smActiveState = STATE_FOLLOW_WALL
+
+
+    #############################################################
+    # STATE_FOLLOW_WALL
+    #############################################################
+    elif smActiveState == STATE_FOLLOW_WALL:
+
+        if EVENT_WALL_LOST:
+            print("Wall lost - SEARCH")
+            smActiveState = STATE_SEARCH_WALL
+
+        else:
+            action_follow_wall()
+
+    sleep(SM_TICK_MS / 1000)
+
+
+def wf_test():
     while True:
-
-        update_sensors()
-        check_wall_events()
-        print(DISTANCE)
-        #############################################################
-        # STATE_INIT
-        #############################################################
-        if smActiveState == STATE_INIT:
-
-            if EVENT_INIT_OK:
-                print("INIT - SEARCH WALL")
-                action_stop()
-                smActiveState = STATE_SEARCH_WALL
-                EVENT_INIT_OK = False
+        wf_task()
 
 
-        #############################################################
-        # STATE_SEARCH_WALL
-        #############################################################
-        elif smActiveState == STATE_SEARCH_WALL:
-
-            if EVENT_WALL_LOST:
-                action_search_wall()
-
-            else:
-                print("Wall found - FOLLOW")
-                smActiveState = STATE_FOLLOW_WALL
-
-
-        #############################################################
-        # STATE_FOLLOW_WALL
-        #############################################################
-        elif smActiveState == STATE_FOLLOW_WALL:
-
-            if EVENT_WALL_LOST:
-                print("Wall lost - SEARCH")
-                smActiveState = STATE_SEARCH_WALL
-
-            else:
-                action_follow_wall()
-
-
-        sleep(SM_TICK_MS / 1000)
+if __name__ == '__main__':
+    wf_test()

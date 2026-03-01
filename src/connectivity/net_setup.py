@@ -15,6 +15,7 @@ SAVE_FILE_DIR = '/cfg/networks.json'
 _netstats = ['Idle', 'Connecting', '', 'Got IP', 'Wrong Password', 'No AP Found', 'Connect Fail']
 
 
+
 def _check_file(path:str) -> bool|None:
     """
     Tjekker om en fil findes.
@@ -122,7 +123,8 @@ def init_wlan(ssid:str=None, password:str=None, bssid:str|None=None, hostname:st
         wlan.active(False)
 
     # Opsæt og tænd wlan
-    wlan.config(hostname=hostname)
+    nw.hostname(hostname)
+    #wlan.config(hostname=hostname)
     wlan.active(True)
 
 
@@ -146,8 +148,10 @@ def init_wlan(ssid:str=None, password:str=None, bssid:str|None=None, hostname:st
     # Vent på at der er forbindelse
     # While loopet kører kun så længe `wlan` er i gang med at oprette forbindelse.
     # Hvis `wlan` ikke er sat til at forbinde, eller allerede er forbundet, etc. springes det over.
-    while wlan.status() == nw.STAT_CONNECTING:
+    while not wlan.isconnected():
         machine.idle() # Reducér clock speed
+        if wlan.status() in (nw.STAT_NO_AP_FOUND, nw.STAT_WRONG_PASSWORD, nw.STAT_CONNECT_FAIL):
+            break
 
     if auto_save and wlan.isconnected():
         save_network(ssid, password, bssid)
