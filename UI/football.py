@@ -2,8 +2,6 @@ import tkinter as tk
 from tkinter import ttk
 import struct
 from udp import UDPClient
-from bases import *
-
 
 BUTTON_OPPOSITES = {
     'N': 'S',

@@ -143,8 +143,7 @@ def sumo_task():
         action_escape()
         smActiveState = STATE_SEARCH
         search_counter = 0
-
-    sleep(SM_TICK_MS / 1000)
+    #sleep(SM_TICK_MS / 1000)
 
 
 def sumo_test():

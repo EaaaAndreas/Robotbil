@@ -1,3 +1,4 @@
+# src/udp.py
 import socket
 from threading import *
 import queue
@@ -35,8 +36,8 @@ class RemoteStatus:
         self._value = struct.unpack(self.datatype, val)[0]
         self.last_updated = time.time()
 
-REMOTE_NAME = 'shitbox.local'
-REMOTE_PORT = 54321
+#REMOTE_NAME = 'shitbox.local'
+#REMOTE_PORT = 54321
 
 class CmdQueue(queue.Queue):
     def __init__(self, *args, **kwargs):
@@ -64,7 +65,7 @@ class CmdQueue(queue.Queue):
         self.put_nowait(cmd + data)
 
 class UDPClient:
-    def __init__(self, ping_interval=1.0, reply_timeout=5.0, connect_timeout=10.0, recv_buffer=2048):
+    def __init__(self, ping_interval=1.0, reply_timeout=5.0, connect_timeout=10.0, recv_buffer=2048, local_addr=None):
         self.ping_interval = ping_interval
         self.reply_timeout = reply_timeout
         self.connect_timeout = connect_timeout
@@ -75,8 +76,8 @@ class UDPClient:
         self.stat_cmds = [self.battery]
 
         self.sock = None
-        self.address = None
-        self._remote_addr = None
+        self.local_addr = local_addr or ('0.0.0.0', 0)
+        self.remote_addr = None
 
         self._send_queue = CmdQueue()
         self._worker_thread = None
@@ -98,20 +99,34 @@ class UDPClient:
     def connect(self, host, port):
         if self.state != "DISCONNECTED":
             return
+        self._running.clear()
         self._cancel_connect.clear()
         self._disconnect_requested.clear()
-        self.address = (host, port)
+        self.remote_addr = (host, port)
         self._connect_thread = Thread(
             target=self._connect_worker,
-            daemon=True
+            daemon=False
         )
         self._connect_thread.start()
 
     def disconnect(self):
         self._cancel_connect.set()
-        if self.state != "CONNECTED":
-            return
         self._disconnect_requested.set()
+        self._running.clear()
+
+        # Wait for connect thread
+        if self._connect_thread and self._connect_thread.is_alive():
+            self._connect_thread.join(timeout=2)
+
+        # Wait for worker thread
+        if self._worker_thread and self._worker_thread.is_alive():
+            self._worker_thread.join(timeout=2)
+
+        if self.sock:
+            try:
+                self.sock.close()
+            except OSError:
+                pass
 
         self._set_state("DISCONNECTED")
 
@@ -139,53 +154,62 @@ class UDPClient:
             self.sock.sendto(message, remote_addr or self._remote_addr)
 
     def _connect_worker(self):
+        print("[UDP-connect] Establishing connection")
         self._set_state("CONNECTING")
         try:
+            print("[UDP-connect] Opening socket")
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             sock.settimeout(0.2)
-            sock.connect(self.address)
-        except OSError:
+            sock.bind(self.local_addr)
+        except OSError as e:
             self._set_state("ERROR")
+            print("[UDP-connect] An error occured while opening socket:", e)
             return
 
         start_time = time.time()
-        remote_addr = None
+        offer_made = False
         seq = 0
+        print("[UDP-connect] Starting connection sequence")
         while not self._cancel_connect.is_set():
             if time.time() - start_time > self.connect_timeout:
                 sock.close()
                 self._set_state("TIMEOUT")
+                print("[UDP-connect] Connection attempt timed out")
                 return
             try:
-                if remote_addr:
-                    sock.sendto(struct.pack('BB', *divmod(seq, 255)) + b'REQUEST', remote_addr)
-                    data, addr = sock.recvfrom(self.recv_buffer)
-                    print(data, addr)
-                    if len(data) > 2 and seq == data[0] * 255 + data[1] and data[2:] == b'ACCEPT' and addr == remote_addr:
+                if offer_made:
+                    sock.sendto(struct.pack('BB', *divmod(seq, 255)) + b'REQUEST', self.remote_addr)
+                    data = sock.recv(self.recv_buffer)
+                    print("[UDP-connect] (Offer made) Received", data)
+                    if len(data) > 2 and seq == data[0] * 255 + data[1] and data[2:] == b'ACCEPT':
                         seq += 1
-                        self._remote_addr = remote_addr
+                        print("[UDP-connect] Received connection accept")
                         break
                 else:
                     seq = 0
-                    sock.sendto(struct.pack('BB', *divmod(seq,255)) + b'DISCOVER', (REMOTE_NAME, REMOTE_PORT))
+                    sock.sendto(struct.pack('BB', *divmod(seq,255)) + b'DISCOVER', self.remote_addr)
                     data, addr = sock.recvfrom(self.recv_buffer)
-                    print(data, addr)
+                    print("[UDP-connect] (No offer) Received", data, addr)
                     if len(data) > 2 and seq == data[0] * 255 + data[1] and data[2:] == b'OFFER':
-                        remote_addr = addr
+                        sock.connect(self.remote_addr)
                         seq +=1
+                        offer_made = True
+                        print("[UDP-connect] Received connection accept")
             except socket.timeout:
                 continue
-            except OSError:
+            except OSError as e:
                 sock.close()
                 self._set_state("ERROR")
+                print("[UDP-connect] An error occurred while connecting:", e)
                 return
 
         if self._cancel_connect.is_set():
-            print("Cancelling connect")
+            print("[UDP-connect] Connection attempt was manually canceled")
             sock.close()
             self._set_state("DISCONNECTED")
             return
 
+        print("[UDP-connect] Connection established successfully. Starting main thread")
         self.sock = sock
         self._running.set()
 
@@ -199,6 +223,7 @@ class UDPClient:
         self._set_state("CONNECTED")
 
     def _worker(self, seq):
+        print("[UDP] Main thead started")
         try:
             while self._running.is_set():
                 now = time.time()
@@ -207,21 +232,24 @@ class UDPClient:
                 # ========== Timeout ==========
                 if self._waiting_for_reply:
                     if now - self._last_send_time > self.reply_timeout:
+                        print("[UDP] Connection timed out")
                         if self.state == "ERROR":
+                            print("[UDP] Closing main thread")
                             self.disconnect()
+                        else:
+                            print("[UDP] Making one more attempt")
                         self._set_state("ERROR")
                         self._waiting_for_reply = False
                         continue
 
                 # ========== Disconnect ==========
                 if self._disconnect_requested.is_set():
+                    print("[UDP] Disconnect requested")
                     if not self._waiting_for_reply:
+                        print("[UDP] Sending disconnect message")
                         seq += 1
                         self._send_packet(seq, Command.disconnect)
-                        print("Disconnect timeout")
-                        break
-                    time.sleep(0.01)
-                    continue
+                    break
 
                 # ========== Send/Receive ==========
                 if not self._waiting_for_reply:
@@ -245,14 +273,14 @@ class UDPClient:
                 time.sleep(0.001)
         finally:
             # ========== Close Connection ==========
-            print("Closing connection")
+            print("[UDP] Closing main thread")
             self._running.clear()
 
             if self.sock:
                 try:
                     self.sock.close()
-                except OSError:
-                    pass
+                except OSError as e:
+                    print("[UDP] An error occurred while closing socket:", e)
 
             self._set_state("DISCONNECTED")
 
@@ -292,10 +320,13 @@ class UDPClient:
             self.on_receive(data)
 
     def _set_state(self, state):
+        print("[UDP-STATE] Set", state)
         if self.state != state:
             self.state = state
+            print("[UDP-STATE] Changed state to", self.state)
             if self.on_state_change:
                 self.on_state_change(state)
+
 
 if __name__ == '__main__':
     cli = UDPClient()

@@ -47,5 +47,5 @@ def fb_control(cmd:bytes):
         _drive[cmd](pwr)
     else:
         stop()
-        cmd, pwr = b'X', 0
+        cmd, pwr = b'XX', 0
     return cmd, pwr, int(ACTIVE)
