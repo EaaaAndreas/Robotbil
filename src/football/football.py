@@ -20,15 +20,15 @@ def stp(*_):
     stop()
 
 _drive = {
-    b'W': drive,
-    b'A': turn_hard_left,
-    b'D': turn_hard_right,
-    b'S': drive_r,
-    b'Q': turn_left,
-    b'E': turn_right,
-    b'Z': left_r,
-    b'C': right_r,
-    b'X': stp,
+    b'NN': drive,
+    b'WW': turn_hard_left,
+    b'EE': turn_hard_right,
+    b'SS': drive_r,
+    b'NW': turn_left,
+    b'NE': turn_right,
+    b'SW': left_r,
+    b'SE': right_r,
+    b'XX': stp,
 }
 
 
@@ -43,7 +43,7 @@ def stop_football():
 def fb_control(cmd:bytes):
     if ACTIVE:
         print("[Football]", cmd)
-        cmd, pwr = ustruct.unpack('sB', cmd)
+        cmd, pwr = ustruct.unpack('2sB', cmd)
         _drive[cmd](pwr)
     else:
         stop()

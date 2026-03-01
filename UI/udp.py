@@ -48,19 +48,20 @@ class CmdQueue(queue.Queue):
                 if c[0] == command:
                     self.queue.remove(c)
 
-    def put(self, cmd:bytes, data:bytes=b'', remove_old=False, **kwargs):
+    def put_cmd(self, cmd:bytes, data:bytes= b'', remove_old=False, **kwargs):
         if remove_old:
             for c in self.queue:
-                if c[0] == cmd:
+                if c.startswith(cmd):
                     self.queue.remove(c)
-        super().put((cmd, data), **kwargs)
+        self.put(cmd + data, **kwargs)
 
-    def put_nowait(self, cmd:bytes, data:bytes=b'', remove_old=False):
+    def put_cmd_nowait(self, cmd:bytes, data:bytes= b'', remove_old=False):
+        print(cmd, data)
         if remove_old:
             for c in self.queue:
-                if c[0] == cmd:
+                if c.startswith(cmd):
                     self.queue.remove(c)
-        super().put_nowait((cmd, data))
+        self.put_nowait(cmd + data)
 
 class UDPClient:
     def __init__(self, ping_interval=1.0, reply_timeout=5.0, connect_timeout=10.0, recv_buffer=2048):
@@ -119,14 +120,14 @@ class UDPClient:
             command = command.encode('ascii')
         if isinstance(data, str):
             data = data.encode('ascii')
-        self._send_queue.put(command, data, remove_old=remove_old, **kwargs)
+        self._send_queue.put_cmd(command, data, remove_old=remove_old, **kwargs)
 
     def queue_command_nowait(self, command:str|bytes, data:str|bytes=b'', remove_old:bool=False):
         if isinstance(command, str):
             command = command.encode('ascii')
         if isinstance(data, str):
             data = data.encode('ascii')
-        self._send_queue.put_nowait(command, data, remove_old=remove_old)
+        self._send_queue.put_cmd_nowait(command, data, remove_old=remove_old)
 
     def clear_command(self, command:str|bytes=b''):
         if isinstance(command, str):
@@ -225,7 +226,8 @@ class UDPClient:
                 # ========== Send/Receive ==========
                 if not self._waiting_for_reply:
                     try:
-                        data = b''.join(self._send_queue.get_nowait())
+                        d = self._send_queue.get_nowait()
+                        data = d
                     except queue.Empty:
                         data = None
                         for cmd in self.stat_cmds:

@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+import struct
 from udp import UDPClient
 from bases import *
 
@@ -49,6 +50,7 @@ class Controller(tk.Variable):
     def add_pressed(self, button):
         button = parse_button(button)
         if button and not BUTTON_OPPOSITES[button] in self.pressed:
+            print("Deteced Button", button)
             updated = button not in self._pressed
             self._pressed.add(button)
             if updated:
@@ -67,14 +69,14 @@ class Controller(tk.Variable):
                     self.update_callback(self.pressed)
 
     def send_command(self):
-        self.cli.queue_command(self._cmd, self.direction, self.speed_var.get())
+        self.cli.queue_command(self._cmd, struct.pack('2sB', self.direction.encode('ascii'), self.speed_var.get()))
 
 class FootballWidget(tk.Frame):
     cmd_name = b'FBC'
     def __init__(self, master, cli, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
         self.cli = cli
-        self.speed = tk.IntVar(self, 255, "SPEED")
+        self.speed = tk.IntVar(self, 100, "SPEED")
         self.controller = Controller(self, self.cli, self.speed, cmd_name=self.cmd_name)
         self._active = False
         self.config(padx=10, pady=10)
@@ -93,7 +95,7 @@ class FootballWidget(tk.Frame):
 
         self._buttons = [self.btn_forward, self.btn_backward, self.btn_left, self.btn_right, self.btn_stop]
         # ========== Speed ==========
-        self.speed_slider = ttk.Scale(self, from_=255, to=0, orient='vertical', variable=self.speed)
+        self.speed_slider = ttk.Scale(self, from_=100, to=0, orient='vertical', variable=self.speed)
         self.speed_slider.grid(row=0, column=4, rowspan=3, padx=(10,0))
         self._bound_funcs = []
 
@@ -133,7 +135,7 @@ class FootballWidget(tk.Frame):
         self.controller.add_pressed(event.char)
 
     def on_release(self, event):
-        pass
+        self.controller.remove_pressed(event.char)
 
     def speed_up(self, event):
         spd = self.speed.get()

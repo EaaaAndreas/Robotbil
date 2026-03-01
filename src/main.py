@@ -1,7 +1,7 @@
 # /main.py
 from connectivity.porting import *
 from football import football as fb
-from wallfollow import wf_task
+from wallfollow import wallfollow as wf
 from battery import battery_status, bat_update
 import motor
 
@@ -18,8 +18,8 @@ class Program:
     all = [shutdown, idle, football, wallfollow, sumo]
 # If adding programs, remember to update `select_program`
 
-
 CURRENT_PROGRAM = Program.idle
+
 
 def stop_program():
     if CURRENT_PROGRAM == Program.football:
@@ -34,15 +34,11 @@ def set_program(prg):
     if prg == Program.football:
         CURRENT_PROGRAM = Program.football
         fb.start_football()
-    elif prg == Program.wallfollow:
-        pass
-    elif prg == Program.sumo:
-        pass
-    elif prg == Program.shutdown:
-        pass
+    elif prg in Program.all:
+        CURRENT_PROGRAM = prg
     else:
         CURRENT_PROGRAM = Program.idle
-    return 'B', CURRENT_PROGRAM
+    return CURRENT_PROGRAM,
 
 def program_select(prg:bytes):
     print(prg, Program.all)
@@ -53,22 +49,24 @@ def program_select(prg:bytes):
     return CURRENT_PROGRAM,
 
 def ping_data():
-    return CURRENT_PROGRAM
+    return CURRENT_PROGRAM,
 
 Command(program_select, '2s', 'PRG')
 Command(fb.fb_control, 'sBB', 'FBC')
 Command(bat_update, 'B', 'BAT')
+Command(ping_data, '2s', 'PIN')
 
 try:
     print('Running main loop')
     while True:
         try:
             udp_task()
-            if connected:
+            if isconnected():
                 if CURRENT_PROGRAM == Program.football:
-                    fb.fb_task()
+                    #fb.fb_task()
+                    pass
                 elif CURRENT_PROGRAM == Program.wallfollow:
-                    wf_task()
+                    wf.wf_task()
                 elif CURRENT_PROGRAM == Program.sumo:
                     pass
         except ConnectionTimeout:

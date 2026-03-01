@@ -1,6 +1,6 @@
 # src/connectivity/_porting.py
 import struct
-__all__ = ["ConnectionTimeout","udp_task", "close_socket", "connected", "test", "Command", ] # Sets what functions are imported when doing `import *`
+__all__ = ["ConnectionTimeout","udp_task", "close_socket", "isconnected", "test", "Command"] # Sets what functions are imported when doing `import *`
 from time import ticks_ms, ticks_diff
 import socket
 print("UDP - init")
@@ -17,6 +17,9 @@ _timer_ms = ticks_ms()
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind(('0.0.0.0', 54321))
 sock.settimeout(0)
+
+def isconnected():
+    return connected
 
 
 def close_socket():
@@ -77,15 +80,19 @@ def handle_message(data:bytes, addr:tuple):
         if connected: # The unit is connected
             cmd = data[:3]
             data = data[3:]
-            if cmd == b'PIN':
-                send(seq, b'ACK')
-            elif cmd == b'DSC':
+            #if cmd == b'PIN':
+            #    send(seq, b'ACK')
+            if cmd == b'DSC':
                 send(seq, b'DSC')
                 connected = False
                 _remote_addr = None
             else:
+                connected = True
                 try:
-                    send(seq, commands[cmd](data))
+                    if len(data):
+                        send(seq, commands[cmd](data))
+                    else:
+                        send(seq, commands[cmd]())
                 except KeyError:
                     send(seq, b"ERR")
             _connection_timeout_ms = ticks_ms()

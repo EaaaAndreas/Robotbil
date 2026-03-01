@@ -100,7 +100,9 @@ class App(tk.Tk):
 
     def update_widgets(self):
         self.conn_widget.update_fmt()
-        self.fb_widget.update_state(self.connection_status.get() == 'CONNECTED')
+        active = self.connection_status.get() == 'CONNECTED'
+        self.fb_widget.set_active(active)
+        self.program_widget.set_active(active)
 
     def connect(self):
         self.cli.connect(*REMOTE_ADDR)
@@ -176,13 +178,13 @@ class ProgramSelectWidget(tk.Frame):
 
         self.btn_confirm = ttk.Button(self, text='Confirm', command=self.cmd_confirm, state='disabled')
         self.btn_confirm.grid(row=1, column=1)
-        self.activate() # DEBUG
+        #self.activate() # DEBUG
 
     def set_program(self, prg:bytes):
         self.current_program.set([nam for nam, val in self.programs.items() if val == prg][0])
 
     def cmd_confirm(self, event=None):
-        self.cli.queue_command_nowait(self.cmd_name)
+        self.cli.queue_command_nowait(self.cmd_name, self.programs[self.next_program.get()])
 
     def cmd_prg_select(self, *args):
         if self.is_active:
