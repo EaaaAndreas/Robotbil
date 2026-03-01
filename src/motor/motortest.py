@@ -74,6 +74,6 @@ def drive(power):
     right_motor.set_speed(power)
 
 # Opret motorer med ;pin_forward, pin_backwards, pin_enable, trim(styke %)
-left_motor = DCMotor(3, 4, 5, trim=0.75)
+left_motor = DCMotor(3, 4, 5, trim=1.0)
 right_motor = DCMotor(1, 2, 0, trim=1.0)
 
