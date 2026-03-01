@@ -1,4 +1,8 @@
 # /main.py
+from time import sleep_ms
+
+sleep_ms(500)
+print("Main")
 from connectivity.porting import *
 from football import football as fb
 from wallfollow import wallfollow as wf
@@ -9,6 +13,14 @@ from time import sleep_ms
 
 sleep_ms(500)
 print("Main")
+class Program:
+    shutdown = b'SD'
+    idle = b'NN'
+    football = b'FB'
+    wallfollow = b'WF'
+    sumo = b'SU'
+    all = [shutdown, idle, football, wallfollow, sumo]
+
 class Program:
     shutdown = b'SD'
     idle = b'NN'
