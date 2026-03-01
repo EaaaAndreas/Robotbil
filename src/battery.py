@@ -13,4 +13,4 @@ def bat_update(*_):
     global battery_status
     battery_status = _bp.read_u16() * 3.3 / _u16 * (_R1 + _R2) / _R2
     print("Battery", battery_status)
-    return min(255, int(battery_status / BATTMAX * 255))
+    return min(255, int(battery_status / BATTMAX * 255)),

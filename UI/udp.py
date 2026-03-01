@@ -11,6 +11,7 @@ class Command:
     ping:bytes = b'PIN'
     connection_timeout:bytes = b'CTO'
     battery:bytes = b'BAT'
+    football = b'FBC'
 
 
 class RemoteStatus:
@@ -37,6 +38,30 @@ class RemoteStatus:
 REMOTE_NAME = 'shitbox.local'
 REMOTE_PORT = 54321
 
+class CmdQueue(queue.Queue):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def remove_command(self, command:bytes):
+        if self.not_empty:
+            for c in self.queue:
+                if c[0] == command:
+                    self.queue.remove(c)
+
+    def put(self, cmd:bytes, data:bytes=b'', remove_old=False, **kwargs):
+        if remove_old:
+            for c in self.queue:
+                if c[0] == cmd:
+                    self.queue.remove(c)
+        super().put((cmd, data), **kwargs)
+
+    def put_nowait(self, cmd:bytes, data:bytes=b'', remove_old=False):
+        if remove_old:
+            for c in self.queue:
+                if c[0] == cmd:
+                    self.queue.remove(c)
+        super().put_nowait((cmd, data))
+
 class UDPClient:
     def __init__(self, ping_interval=1.0, reply_timeout=5.0, connect_timeout=10.0, recv_buffer=2048):
         self.ping_interval = ping_interval
@@ -52,7 +77,7 @@ class UDPClient:
         self.address = None
         self._remote_addr = None
 
-        self._send_queue = queue.Queue()
+        self._send_queue = CmdQueue()
         self._worker_thread = None
         self._connect_thread = None
 
@@ -89,8 +114,24 @@ class UDPClient:
 
         self._set_state("DISCONNECTED")
 
-    def send(self, data: bytes):
-        self._send_queue.put(data)
+    def queue_command(self, command:str|bytes, data:str|bytes=b'', remove_old=False, **kwargs):
+        if isinstance(command, str):
+            command = command.encode('ascii')
+        if isinstance(data, str):
+            data = data.encode('ascii')
+        self._send_queue.put(command, data, remove_old=remove_old, **kwargs)
+
+    def queue_command_nowait(self, command:str|bytes, data:str|bytes=b'', remove_old:bool=False):
+        if isinstance(command, str):
+            command = command.encode('ascii')
+        if isinstance(data, str):
+            data = data.encode('ascii')
+        self._send_queue.put_nowait(command, data, remove_old=remove_old)
+
+    def clear_command(self, command:str|bytes=b''):
+        if isinstance(command, str):
+            command = command.encode('ascii')
+        self._send_queue.remove_command(command)
 
     def _send(self, message, remote_addr=None):
         if self.sock:
@@ -184,7 +225,7 @@ class UDPClient:
                 # ========== Send/Receive ==========
                 if not self._waiting_for_reply:
                     try:
-                        data = self._send_queue.get_nowait()
+                        data = b''.join(self._send_queue.get_nowait())
                     except queue.Empty:
                         data = None
                         for cmd in self.stat_cmds:
@@ -200,25 +241,23 @@ class UDPClient:
                     self._send_packet(seq, data)
 
                 time.sleep(0.001)
-        except Exception as e:
-            self.disconnect()
-            raise e
-        # ========== Close Connection ==========
-        print("Closing connection")
-        self._running.clear()
+        finally:
+            # ========== Close Connection ==========
+            print("Closing connection")
+            self._running.clear()
 
-        if self.sock:
-            try:
-                self.sock.close()
-            except OSError:
-                pass
+            if self.sock:
+                try:
+                    self.sock.close()
+                except OSError:
+                    pass
 
-        self._set_state("DISCONNECTED")
+            self._set_state("DISCONNECTED")
 
     def _send_packet(self, seq:int, data:bytes):
         try:
             msg = struct.pack('BB', *divmod(seq, 255)) + data
-            print('Sending', msg)
+            print('[UDP-SEND]', msg)
             self.sock.send(msg)
             self._waiting_for_reply = True
             self._last_send_time = time.time()
@@ -228,7 +267,7 @@ class UDPClient:
     def _handle_receive(self):
         try:
             data = self.sock.recv(self.recv_buffer)
-            print('Received', data)
+            print('[UDP-RECEIVE]', data)
         except socket.timeout:
             return
         except OSError:

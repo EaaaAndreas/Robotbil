@@ -2,17 +2,18 @@
 import tkinter as tk
 from tkinter import ttk
 from udp import UDPClient, Command
-import struct
-
-class Program:
-    football = b'FB'
-    sumo = b'SU'
-    wall_follow = b'WF'
-    idle = b'NN'
-
+import bases
+from football import FootballWidget
 REMOTE_ADDR = ('shitbox.local', 54321)
 ESTABLISH_CONNECTION_TIMEOUT = 30 # s
 CONNECTION_TIMEOUT = 5 # s
+
+
+# TODO:
+#   - IR value
+#   - TOF value
+#   - search count
+#   - H/V speed
 
 def main():
     app = App()
@@ -30,7 +31,6 @@ class App(tk.Tk):
     def __init__(self):
         # ========== Setup app ==========
         super().__init__()
-        # self.sock = UDPSocket()
         self.title("Shitbox - disconnected")
         self.minsize(600,400)
         self.option_add('*tearOff', False)
@@ -41,9 +41,14 @@ class App(tk.Tk):
 
         # ========== Shared Variables ==========
         self.connection_status = tk.StringVar(self, "DISCONNECTED", "CONN_STATUS")
-        self.program = tk.StringVar(self, "Off", "PROGRAM")
+        self.next_program = tk.StringVar(self, "Off", "PROGRAM")
         self.current_program = tk.StringVar(self, "Off", "CURRENT_PROGRAM")
         self.battery_status = tk.IntVar(self, 0, "BATTERY")
+        self.left_wheel_power = tk.IntVar(self, 0, "LEFT_PWR")
+        self.right_wheel_power = tk.IntVar(self, 0, "RIGHT_PWR")
+        self.tof_value = tk.IntVar(self, 0, "TOF_VALUE")
+        self.ir_value = tk.IntVar(self, 0, "IR_VALUE")
+
 
         # ========== Keybinds ==========
         self.bind('<Control-q>', self.cmd_quit)
@@ -55,21 +60,20 @@ class App(tk.Tk):
 
 
         # ----- Program -----
-        self.prg_label = ttk.Label(self, textvariable=self.current_program)
-        self.prg_label.grid(row=1,column=0, columnspan=2)
-        self.prg_drp_dwn = ttk.Combobox(
-            values=['Off', 'Football', 'Sumo', 'Wall follow'],
-            textvariable=self.program,
-            state='normal'
-        )
-        self.prg_drp_dwn.bind('<Return>', self.cmd_set_program)
-        self.prg_drp_dwn.grid(row=2, column=0)
-        self.prg_confirm = ttk.Button(text="Update program", state='normal', command=self.cmd_set_program)
-        self.prg_confirm.grid(row=2, column=1)
+        self.program_widget = ProgramSelectWidget(self, cli=self.cli)
+        self.program_widget.grid(row=1, column=0)
+        self.connection_status.trace_add("write", self._on_connect)
 
         # ----- Football -----
-        self.fb_widget = FootballWidget(self)
+        self.fb_widget = FootballWidget(self, cli=self.cli)
         self.fb_widget.grid(row=3,column=0)
+
+
+        self.sensor_widget = SensorsWidget(self)
+        self.sensor_widget.grid(row=4, column=0)
+
+    def _on_connect(self, *args):
+        self.program_widget.set_active(self.connection_status.get() == 'CONNECTED')
 
     def cmd_quit(self, event=None):
         self.quit()
@@ -83,34 +87,20 @@ class App(tk.Tk):
 
     def on_state_change(self, state):
         self.connection_status.set(state)
-        self.after(5, self.update_widgets)
+        self.update_widgets()
 
     def on_recv(self, data):
         cmd = data[2:5]
         data = data[5:]
-        print("ON Received", cmd, data)
         self.battery_status.set(self.cli.battery.value or 0)
-        if cmd == Command.program:
-            match data:
-                case Program.idle:
-                    self.current_program.set('Off')
-                case Program.wall_follow:
-                    self.current_program.set('Wall Follow')
-                case Program.sumo:
-                    self.current_program.set('Sumo')
-                case Program.football:
-                    self.current_program.set('Football')
+        if cmd == self.program_widget.cmd_name:
+            n = [prg for prg, val in self.program_widget.programs.items() if val == data][0]
+            self.current_program.set(n)
         self.update_widgets()
 
     def update_widgets(self):
         self.conn_widget.update_fmt()
-        if self.connection_status.get() == 'CONNECTED':
-            self.prg_drp_dwn.config(state='normal')
-            self.prg_confirm.config(state='normal')
-        else:
-            self.prg_drp_dwn.config(state='disabled')
-            self.prg_confirm.config(state='disabled')
-        self.fb_widget.update_fmt()
+        self.fb_widget.update_state(self.connection_status.get() == 'CONNECTED')
 
     def connect(self):
         self.cli.connect(*REMOTE_ADDR)
@@ -118,20 +108,8 @@ class App(tk.Tk):
     def disconnect(self):
         self.cli.disconnect()
 
-    def set_program(self):
-        cmds = {
-            'Football': b'FB',
-            'Off': b'NN',
-            'Sumo': b'SU',
-            'Wall Follow': b'WF'
-        }
-        if self.program.get() in cmds:
-            cmd = cmds[self.program.get()]
-        else:
-            cmd = cmds['Off']
-        self.cli.send(Command.program + cmd)
-
 class ConnectWidget(tk.Frame):
+    # TODO: Remove - Depricated
     def __init__(self, master:App, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
         self.master:App = master
@@ -172,138 +150,122 @@ class ConnectWidget(tk.Frame):
     def cmd_disconnect(self):
         self.master.disconnect()
 
-class FootballWidget(tk.Frame):
+class ProgramSelectWidget(tk.Frame):
+    cmd_name = b'PRG'
+    programs = {'Off': b'NN', 'Football': b'FB', 'Sumo': b'SU', 'Wall Follow': b'WF'}
+    def __init__(self, master:App, cli:UDPClient, *args, **kwargs):
+        super().__init__(master, *args, **kwargs)
+        self.master:App = master
+        self.cli = cli
+        self.current_program = self.master.current_program
+        self.next_program = self.master.next_program
+        self._active = False
+
+        self.prg_label = ttk.Label(self, name='prg_header', textvariable=self.current_program, font=('Arial', 16))
+        self.prg_label.grid(row=0, column=0, columnspan=2)
+
+        self.dropdown = ttk.Combobox(
+            self,
+            validate='all',
+            validatecommand=self.cmd_prg_select,
+            textvariable=self.next_program,
+            values=list(self.programs.keys()),
+            state='disabled',
+        )
+        self.dropdown.grid(row=1, column=0)
+
+        self.btn_confirm = ttk.Button(self, text='Confirm', command=self.cmd_confirm, state='disabled')
+        self.btn_confirm.grid(row=1, column=1)
+        self.activate() # DEBUG
+
+    def set_program(self, prg:bytes):
+        self.current_program.set([nam for nam, val in self.programs.items() if val == prg][0])
+
+    def cmd_confirm(self, event=None):
+        self.cli.queue_command_nowait(self.cmd_name)
+
+    def cmd_prg_select(self, *args):
+        if self.is_active:
+            self.btn_confirm['state'] = 'disabled' if self.current_program.get() == self.next_program.get() else 'normal'
+        else:
+            self.btn_confirm['state'] = 'disabled'
+        return True
+
+    @property
+    def is_active(self):
+        return self._active
+
+    def activate(self):
+        self._active = True
+        self.dropdown.config(state='normal')
+        self.cmd_prg_select()
+
+    def deactivate(self):
+        self.dropdown.config(state='disabled')
+        self.cmd_prg_select()
+
+    def set_active(self, state):
+        if state:
+            self.activate()
+        else:
+            self.deactivate()
+
+
+    @property
+    def curr_program(self):
+        return self.current_program.get()
+
+    @curr_program.setter
+    def curr_program(self, value:str):
+        self.current_program.set(value)
+
+    @property
+    def nxt_program(self):
+        return self.next_program.get()
+
+    @nxt_program.setter
+    def nxt_program(self, value):
+        self.next_program.set(value)
+
+class WheelScale(ttk.Frame):
+    def __init__(self, master, text:str, variable:tk.IntVar, *args, **kwargs):
+        super().__init__(master, *args, **kwargs)
+        self.variable = variable
+        self.text_var = tk.StringVar(self, '0')
+        self.variable.trace_add('write', self._update_var)
+
+        self.header = ttk.Label(self, text=text)
+        self.header.grid(row=0, column=0)
+
+        self.scale = ttk.Progressbar(self, orient="vertical", variable=self.variable)
+        self.scale.grid(row=1, column=0)
+
+        self.label = ttk.Label(self, textvariable=self.text_var)
+        self.label.grid(row=2, column=0)
+
+    def _update_var(self):
+        self.text_var.set(str(self.variable.get()))
+
+class SensorsWidget(tk.Frame):
     def __init__(self, master:App, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
         self.master:App = master
-        self.pressed = set()
-        self.direction = tk.StringVar(self, "X", "FB_DIR")
-        self.speed = tk.IntVar(self, 0, "FB_SPD")
+        self.left_speed_var = master.left_wheel_power
+        self.right_speed_var = master.right_wheel_power
+        self.tof_var = master.tof_value
+        self.tof_text = tk.StringVar(self, '- mm')
+        self.tof_var.trace_add("write", lambda: self.tof_text.set((str(self.tof_var.get())if self.master.connection_status.get() == 'CONNECTED' else '-') + ' mm'))
+        self.ir_var = master.ir_value
+        self.ir_text = tk.StringVar(self, '-')
 
-        self.fwd = ttk.Button(self, text="↑", command=self.cmd_fwd)
-        self.fwd.grid(row=0, column=1)
-        self.bck = ttk.Button(self, text="↓", command=self.cmd_bck)
-        self.bck.grid(row=2, column=1)
-        self.lef = ttk.Button(self, text="←", command=self.cmd_lef)
-        self.lef.grid(row=1, column=0)
-        self.rig = ttk.Button(self, text="→", command=self.cmd_rig)
-        self.rig.grid(row=1,column=2)
-        self.stp = ttk.Button(self, text="STOP", command=self.cmd_stop)
-        self.stp.grid(row=1, column=1)
-
-        master.bind("<KeyPress>", self.on_key_press)
-        master.bind("<KeyRelease>", self.on_key_release)
-
-        self.spd_adjust = ttk.Scale(self,orient='vertical', to=255, variable=self.speed)
-        self.spd_adjust.grid(row=0, column=4, rowspan=3, padx=20)
-
-        self.fmt_disabled()
-
-    def update_buttons(self):
-        self.fwd['state'] = 'active' if 'w' in self.pressed else 'normal'
-        self.bck['state'] = 'active' if 's' in self.pressed else 'normal'
-        self.lef['state'] = 'active' if 'a' in self.pressed else 'normal'
-        self.rig['state'] = 'active' if 'd' in self.pressed else 'normal'
-        self.stp['state'] = 'active' if 'x' in self.pressed else 'normal'
-
-    def on_key_press(self, event):
-        key = event.keysym.lower()
-        match key:
-            case 'w' | 'up':
-                if 's' not in self.pressed:
-                    self.pressed.discard('x')
-                    self.pressed.add('w')
-            case 's' | 'down':
-                if 'w' not in self.pressed:
-                    self.pressed.discard('x')
-                    self.pressed.add('s')
-            case 'a' | 'left':
-                if 'd' not in self.pressed:
-                    self.pressed.discard('x')
-                    self.pressed.add('a')
-            case 'd' | 'right':
-                if 'a' not in self.pressed:
-                    self.pressed.discard('x')
-                    self.pressed.add('d')
-        self.update_buttons()
-
-    def send_command(self):
-        cmd = b'FBC'
-        if 'w' in self.pressed:
-            if 'a' in self.pressed:
-                cmd += b'Q'
-            elif 'd' in self.pressed:
-                cmd += b'E'
-            else:
-                cmd += b'W'
-        elif 's' in self.pressed:
-            if 'a' in self.pressed:
-                cmd += b'Z'
-            elif 'd' in self.pressed:
-                cmd += b'C'
-            else:
-                cmd += b'S'
-        else:
-            cmd += b'X'
-        cmd += struct.pack('B', self.speed.get())
+        self.left_wheel_scale = WheelScale(self, text='L', variable=self.left_speed_var)
+        self.left_wheel_scale.grid(row=0, column=0)
+        self.right_wheel_scale = WheelScale(self, text='R', variable=self.right_speed_var)
+        self.right_wheel_scale.grid(row=0, column=1)
 
 
-    def on_key_release(self, event):
-        key = event.keysym.lower()
-        if key == 'up':
-            key = 'w'
-        elif key == 'down':
-            key = 's'
-        elif key == 'left':
-            key = 'a'
-        elif key == 'right':
-            key = 'd'
-        self.pressed.discard(key)
-        if len(self.pressed) == 0:
-            self.pressed.add('x')
-        self.update_buttons()
+        self.tof_scale = ttk.Progressbar(self, orient="horizontal", variable=self.tof_var)
 
-    def fmt_normal(self):
-        self.fwd['state'] = 'normal'
-        self.bck['state'] = 'normal'
-        self.lef['state'] = 'normal'
-        self.rig['state'] = 'normal'
-        self.stp['state'] = 'normal'
-        self.spd_adjust['state'] = 'normal'
 
-    def fmt_disabled(self):
-        self.fwd['state'] = 'disabled'
-        self.bck['state'] = 'disabled'
-        self.lef['state'] = 'disabled'
-        self.rig['state'] = 'disabled'
-        self.stp['state'] = 'disabled'
-        self.spd_adjust['state'] = 'disabled'
-
-    def update_fmt(self):
-        print("Updating football fmt", self.master.connection_status.get(), self.master.current_program.get())
-        if self.master.connection_status.get() == "CONNECTED" and self.master.current_program.get() == "Football":
-            self.fmt_normal()
-        else:
-            self.fmt_disabled()
-
-    class DummyPress:
-        def __init__(self, key:str):
-            self.key = key
-        @property
-        def keysym(self):
-            return self.key
-
-    def cmd_fwd(self):
-        self.on_key_press(self.DummyPress('w'))
-
-    def cmd_bck(self):
-        pass
-    def cmd_rig(self):
-        pass
-    def cmd_lef(self):
-        pass
-    def cmd_stop(self):
-        self.on_key_press(self.DummyPress('x'))
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

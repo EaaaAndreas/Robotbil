@@ -1,6 +1,6 @@
 # src/connectivity/_porting.py
 import struct
-__all__ = ["ConnectionTimeout","udp_task", "close_socket", "connected", "test", "Command"] # Sets what functions are imported when doing `import *`
+__all__ = ["ConnectionTimeout","udp_task", "close_socket", "connected", "test", "Command", ] # Sets what functions are imported when doing `import *`
 from time import ticks_ms, ticks_diff
 import socket
 print("UDP - init")
@@ -57,7 +57,9 @@ class Command:
 
     def __call__(self, *args:bytes):
         print(self.name, args)
-        return self.name + struct.pack(self.output_type, self.fn(*args))
+        ans = tuple(self.fn(*args))
+        print(ans)
+        return self.name + struct.pack(self.output_type, *ans)
 
 
 # ============================== Transmitting ==============================
@@ -72,11 +74,9 @@ def handle_message(data:bytes, addr:tuple):
     if len(data) > 2:
         seq = data[:2]
         data = data[2:]
-        print(data)
         if connected: # The unit is connected
             cmd = data[:3]
             data = data[3:]
-            print(cmd, data)
             if cmd == b'PIN':
                 send(seq, b'ACK')
             elif cmd == b'DSC':

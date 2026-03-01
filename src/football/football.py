@@ -42,9 +42,10 @@ def stop_football():
 
 def fb_control(cmd:bytes):
     if ACTIVE:
+        print("[Football]", cmd)
         cmd, pwr = ustruct.unpack('sB', cmd)
         _drive[cmd](pwr)
     else:
         stop()
         cmd, pwr = b'X', 0
-    return cmd, pwr, ACTIVE
+    return cmd, pwr, int(ACTIVE)

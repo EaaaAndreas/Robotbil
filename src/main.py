@@ -50,13 +50,13 @@ def program_select(prg:bytes):
         set_program(prg)
     else:
         set_program(Program.idle)
-    return CURRENT_PROGRAM
+    return CURRENT_PROGRAM,
 
 def ping_data():
     return CURRENT_PROGRAM
 
 Command(program_select, '2s', 'PRG')
-Command(fb.fb_control, 'sB?', 'FBC')
+Command(fb.fb_control, 'sBB', 'FBC')
 Command(bat_update, 'B', 'BAT')
 
 try:
