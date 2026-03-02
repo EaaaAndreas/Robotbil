@@ -112,7 +112,6 @@ class FootballWidget(tk.Frame):
         self._bound_funcs = [
             self.master.bind('<KeyPress>', self.key_press),
             self.master.bind('<KeyRelease>', self.on_release),
-            self.master.bind('Shift', self.speed_up)
         ]
         for btn in self._buttons:
             btn['state'] = 'normal'
@@ -130,20 +129,28 @@ class FootballWidget(tk.Frame):
         self.speed_slider['state'] = 'disabled'
 
     def key_press(self, event):
+        if event.char == 'q':
+            self.speed_up()
+        elif event.char == 'e':
+            self.slow_down()
+
         self.controller.add_pressed(event.char)
 
     def on_release(self, event):
         self.controller.remove_pressed(event.char)
 
-    def speed_up(self, event):
+    def speed_up(self, *event):
         spd = self.speed.get()
         if spd < 255:
             self.speed.set(min(255, spd + 10))
 
-    def slow_down(self, event):
+    def slow_down(self, *event):
         spd = self.speed.get()
         if spd > 0:
             self.speed.set(max(spd - 10, 0))
+
+    def is_active(self):
+        return self._active
 
     def on_update(self, direction):
         if self.is_active():
